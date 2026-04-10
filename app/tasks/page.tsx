@@ -1,6 +1,7 @@
-import { mockTasks, mockProjects } from '@/lib/mock-data';
+import { getTasks, getProjects } from '@/lib/db';
 import { TasksClient } from '@/components/tasks/TasksClient';
 
-export default function TasksPage() {
-  return <TasksClient initialTasks={mockTasks} initialProjects={mockProjects} />;
+export default async function TasksPage() {
+  const [tasks, projects] = await Promise.all([getTasks(), getProjects()]);
+  return <TasksClient initialTasks={tasks} initialProjects={projects} />;
 }

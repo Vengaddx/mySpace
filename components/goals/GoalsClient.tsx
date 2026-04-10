@@ -1,6 +1,14 @@
 'use client';
 
 import React, { useState, useMemo, useId } from 'react';
+
+function api(url: string, method: string, body?: unknown) {
+  fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
+}
 import { Goal } from '@/types';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-react';
@@ -99,24 +107,33 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
   function toggle(goalId: string, ds: string) {
     setGoals(p => p.map(g => {
       if (g.id !== goalId) return g;
-      return { ...g, checkins: g.checkins.includes(ds) ? g.checkins.filter(c => c !== ds) : [...g.checkins, ds] };
+      const checkins = g.checkins.includes(ds) ? g.checkins.filter(c => c !== ds) : [...g.checkins, ds];
+      api(`/api/goals/${goalId}`, 'PUT', { checkins });
+      return { ...g, checkins };
     }));
   }
   function setCurrent(goalId: string, val: number) {
-    setGoals(p => p.map(g => g.id === goalId ? { ...g, current: Math.max(0, val) } : g));
+    const current = Math.max(0, val);
+    setGoals(p => p.map(g => g.id === goalId ? { ...g, current } : g));
+    api(`/api/goals/${goalId}`, 'PUT', { current });
   }
-  function remove(id: string) { setGoals(p => p.filter(g => g.id !== id)); }
+  function remove(id: string) {
+    setGoals(p => p.filter(g => g.id !== id));
+    api(`/api/goals/${id}`, 'DELETE');
+  }
 
   function addGoal() {
     if (!nTitle.trim()) return;
-    setGoals(p => [...p, {
+    const newGoal = {
       id: `goal-${Date.now()}`, month: monthStr,
       title: nTitle.trim(), emoji: '', color: nColor, type: nType, checkins: [],
       target:  nType === 'milestone' ? (Number(nTarget) || undefined) : undefined,
       unit:    nType === 'milestone' ? (nUnit.trim() || undefined) : undefined,
       current: nType === 'milestone' ? 0 : undefined,
       createdAt: new Date().toISOString(),
-    }]);
+    };
+    setGoals(p => [...p, newGoal]);
+    api('/api/goals', 'POST', newGoal);
     setAdding(false); setNTitle(''); setNColor(PALETTE[0]); setNType('habit'); setNTarget(''); setNUnit('');
   }
 

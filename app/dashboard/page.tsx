@@ -1,8 +1,9 @@
-import { mockTasks } from '@/lib/mock-data';
+import { getTasks } from '@/lib/db';
 import { DashboardClient } from '@/components/dashboard/DashboardClient';
 import { PageContainer } from '@/components/layout/PageContainer';
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const tasks = await getTasks();
   return (
     <PageContainer>
       <div className="mb-6">
@@ -14,7 +15,7 @@ export default function DashboardPage() {
         </h1>
         <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Monthly task completion by workstream</p>
       </div>
-      <DashboardClient tasks={mockTasks} />
+      <DashboardClient tasks={tasks} />
     </PageContainer>
   );
 }

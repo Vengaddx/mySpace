@@ -1,6 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+
+function api(url: string, method: string, body?: unknown) {
+  fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
+}
 import { Task, WeeklyIntent } from '@/types';
 import { isOverdue, getCurrentWeekRange } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -31,17 +39,28 @@ export function WeekPlannerClient({ initialTasks, initialIntent }: WeekPlannerCl
 
   const handleStatusChange = (id: string, status: Task['status']) => {
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status } : t));
+    api(`/api/tasks/${id}`, 'PUT', { status });
   };
-  const handleDelete = (id: string) => setTasks((prev) => prev.filter((t) => t.id !== id));
+  const handleDelete = (id: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+    api(`/api/tasks/${id}`, 'DELETE');
+  };
   const handleToggleCritical = (id: string) => {
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, priority: t.priority === 'critical' ? 'high' : 'critical' } : t));
+    const task = tasks.find((t) => t.id === id);
+    const priority = task?.priority === 'critical' ? 'high' : 'critical';
+    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, priority } : t));
+    api(`/api/tasks/${id}`, 'PUT', { priority });
   };
   const handlePinToWeek = (id: string) => {
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, isWeekFocus: !t.isWeekFocus } : t));
+    const task = tasks.find((t) => t.id === id);
+    const isWeekFocus = !task?.isWeekFocus;
+    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, isWeekFocus } : t));
+    api(`/api/tasks/${id}`, 'PUT', { isWeekFocus });
   };
   const handleSave = (updated: Task) => {
     setTasks((prev) => prev.map((t) => t.id === updated.id ? updated : t));
     setSelectedTask(updated);
+    api(`/api/tasks/${updated.id}`, 'PUT', updated);
   };
 
   const taskCardProps = (task: Task) => ({

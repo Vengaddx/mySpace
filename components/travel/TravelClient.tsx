@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Plus, MapPin, List, CalendarDays } from 'lucide-react';
-import { Trip, mockTrips, getNextTrip } from '@/lib/travel-data';
+import { Trip, getNextTrip } from '@/lib/travel-data';
 import { cn } from '@/lib/utils';
 import { TravelSummaryStrip } from './TravelSummaryStrip';
 import { TravelHeroCard, TravelHeroEmpty } from './TravelHeroCard';
@@ -10,12 +10,22 @@ import { TripCard } from './TripCard';
 import { TravelCalendar } from './TravelCalendar';
 import { AddTripDialog } from './AddTripDialog';
 
-const TODAY = '2026-04-09';
+const TODAY = new Date().toISOString().slice(0, 10);
 
 type View = 'list' | 'calendar';
 
-export function TravelClient() {
-  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+function api(url: string, method: string, body?: unknown) {
+  fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
+}
+
+interface TravelClientProps { initialTrips: Trip[] }
+
+export function TravelClient({ initialTrips }: TravelClientProps) {
+  const [trips, setTrips] = useState<Trip[]>(initialTrips);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
   const [prefillDate, setPrefillDate] = useState<string | undefined>(undefined);
@@ -63,24 +73,24 @@ export function TravelClient() {
 
   function handleSave(data: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>) {
     if (editTrip) {
-      setTrips((prev) =>
-        prev.map((t) =>
-          t.id === editTrip.id
-            ? { ...editTrip, ...data, updatedAt: new Date().toISOString() }
-            : t
-        )
-      );
+      const updated: Trip = { ...editTrip, ...data, updatedAt: new Date().toISOString() };
+      setTrips((prev) => prev.map((t) => t.id === editTrip.id ? updated : t));
+      api(`/api/trips/${editTrip.id}`, 'PUT', data);
     } else {
-      setTrips((prev) => [
-        ...prev,
-        {
-          ...data,
-          id: String(Date.now()),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ]);
+      const newTrip: Trip = {
+        ...data,
+        id: String(Date.now()),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setTrips((prev) => [...prev, newTrip]);
+      api('/api/trips', 'POST', newTrip);
     }
+  }
+
+  function handleDelete(id: string) {
+    setTrips((prev) => prev.filter((t) => t.id !== id));
+    api(`/api/trips/${id}`, 'DELETE');
   }
 
   return (

@@ -13,6 +13,14 @@ import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 
+function api(url: string, method: string, body?: unknown) {
+  fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
+}
+
 
 interface TasksClientProps {
   initialTasks: Task[];
@@ -119,16 +127,19 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
       createdAt: new Date().toISOString(),
     };
     setProjects((prev) => [...prev, newProject]);
+    api('/api/projects', 'POST', newProject);
   };
 
   const handleStatusChange = (id: string, status: Task['status']) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t))
     );
+    api(`/api/tasks/${id}`, 'PUT', { status });
   };
   const handleDelete = (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     if (selectedTask?.id === id) setDrawerOpen(false);
+    api(`/api/tasks/${id}`, 'DELETE');
   };
   const handleToggleCritical = (id: string) => {
     setTasks((prev) =>
@@ -136,6 +147,8 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
         t.id === id ? { ...t, priority: t.priority === 'critical' ? 'high' : 'critical' } : t
       )
     );
+    const task = tasks.find((t) => t.id === id);
+    if (task) api(`/api/tasks/${id}`, 'PUT', { priority: task.priority === 'critical' ? 'high' : 'critical' });
   };
   const handleToggleWeekFocus = (id: string) => {
     setTasks((prev) =>
@@ -143,6 +156,8 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
         t.id === id ? { ...t, isWeekFocus: !t.isWeekFocus, updatedAt: new Date().toISOString() } : t
       )
     );
+    const task = tasks.find((t) => t.id === id);
+    if (task) api(`/api/tasks/${id}`, 'PUT', { isWeekFocus: !task.isWeekFocus });
   };
   const handleToggleMonthFocus = (id: string) => {
     setTasks((prev) =>
@@ -150,10 +165,13 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
         t.id === id ? { ...t, isMonthFocus: !t.isMonthFocus, updatedAt: new Date().toISOString() } : t
       )
     );
+    const task = tasks.find((t) => t.id === id);
+    if (task) api(`/api/tasks/${id}`, 'PUT', { isMonthFocus: !task.isMonthFocus });
   };
   const handleSave = (updated: Task) => {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     setSelectedTask(updated);
+    api(`/api/tasks/${updated.id}`, 'PUT', updated);
   };
   const handleAdd = (partial: Partial<Task>) => {
     const newTask: Task = {
@@ -172,6 +190,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
       updatedAt: new Date().toISOString(),
     };
     setTasks((prev) => [newTask, ...prev]);
+    api('/api/tasks', 'POST', newTask);
   };
 
   const openDrawer = (task: Task) => {
