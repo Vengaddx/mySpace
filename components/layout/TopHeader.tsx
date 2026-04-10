@@ -34,8 +34,8 @@ export function TopHeader() {
           </span>
         </div>
 
-        {/* Nav */}
-        <nav className="flex items-center gap-0.5">
+        {/* Nav — desktop only; mobile uses BottomNav */}
+        <nav className="hidden lg:flex items-center gap-0.5">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (

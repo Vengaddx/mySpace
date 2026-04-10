@@ -129,7 +129,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     <div className="max-w-4xl mx-auto space-y-3">
 
       {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-1.5">
           <NavBtn onClick={goMonthBack}><ChevronLeft size={13}/></NavBtn>
           <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 min-w-[140px] text-center select-none">
@@ -204,10 +204,10 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <div className="flex gap-5 items-start">
+    <div className="flex flex-col md:flex-row gap-4 md:gap-5 items-start">
 
       {/* ── Calendar grid ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 rounded-2xl overflow-hidden">
+      <div className="w-full md:flex-1 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 rounded-2xl overflow-hidden">
 
         {/* Day-of-week header */}
         <div className="grid grid-cols-7 border-b border-zinc-50 dark:border-zinc-800/60 px-2 py-2">
@@ -278,7 +278,7 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
       </div>
 
       {/* ── Selected day panel ────────────────────────────────────────────────── */}
-      <div className="w-56 shrink-0 sticky top-20">
+      <div className="w-full md:w-56 md:shrink-0 md:sticky md:top-20">
         <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 rounded-2xl overflow-hidden">
 
           {/* Date header */}
@@ -291,10 +291,12 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
             </p>
           </div>
 
-          {/* Large rings */}
+          {/* Large rings + checklist — row on mobile, stacked on sidebar */}
           {habits.length > 0 && (
-            <div className="flex justify-center py-5">
-              <GoalRings progresses={selProgresses} colors={colors} size={120} />
+            <div className="flex md:flex-col">
+              <div className="flex justify-center py-4 px-4 md:py-5">
+                <GoalRings progresses={selProgresses} colors={colors} size={100} />
+              </div>
             </div>
           )}
 
@@ -341,7 +343,7 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
 
         {/* Milestones (compact, below panel) */}
         {milestones.length > 0 && (
-          <div className="mt-3 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 rounded-2xl overflow-hidden">
+          <div className="mt-3 w-full bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/80 rounded-2xl overflow-hidden">
             <div className="px-4 py-2.5 border-b border-zinc-50 dark:border-zinc-800/60">
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-600">Milestones</p>
             </div>
@@ -405,7 +407,7 @@ function AddForm({ title, setTitle, color, setColor, type, setType, target, setT
         placeholder="Goal name…"
         className="w-full text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 bg-transparent outline-none" />
 
-      <div className="flex items-center gap-6">
+      <div className="flex flex-wrap items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-2.5">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-600 w-10 shrink-0">Color</span>
           <div className="flex gap-2">

@@ -254,10 +254,10 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex gap-3" style={{ height: 'calc(100vh - 200px)', minHeight: 520 }}>
+    <div className="flex gap-3" style={{ height: 'calc(100vh - 180px)', minHeight: 480 }}>
 
       {/* ── Calendar column ── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-auto md:overflow-x-visible">
 
         {/* Navigation */}
         <div className="flex items-center gap-2 mb-3 shrink-0">
@@ -521,10 +521,10 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
 
       </div>
 
-      {/* ── Inbox / Unscheduled Panel ── */}
+      {/* ── Inbox / Unscheduled Panel — hidden on mobile, shown on iPad+ ── */}
       <div
         className={cn(
-          'w-[200px] shrink-0 flex flex-col rounded-2xl border bg-white dark:bg-zinc-950 overflow-hidden transition-all duration-150',
+          'hidden md:flex w-[200px] shrink-0 flex-col rounded-2xl border bg-white dark:bg-zinc-950 overflow-hidden transition-all duration-150',
           inboxHov
             ? 'border-zinc-400 dark:border-zinc-500 shadow-lg scale-[1.01]'
             : isDragging
