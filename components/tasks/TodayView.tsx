@@ -115,7 +115,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   const overdueTasks = useMemo(() => tasks.filter(t => isOverdue(t.dueDate, t.status)), [tasks]);
 
   const todayOpen = useMemo(() =>
-    tasks.filter(t => !isOverdue(t.dueDate, t.status) && isTodayDate(t.dueDate) && t.status !== 'done'),
+    tasks.filter(t => !isOverdue(t.dueDate, t.status) && isTodayDate(t.dueDate)),
     [tasks]);
 
   const scheduledTasks = useMemo(() => todayOpen.filter(t => !t.isUnscheduled && hasTime(t.dueDate)), [todayOpen]);
@@ -173,7 +173,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                 className="flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
               >
                 <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
-                <span className="text-[12px] font-medium text-zinc-700 dark:text-zinc-300 max-w-[160px] truncate">{task.title}</span>
+                <span className={cn('text-[12px] font-medium text-zinc-700 dark:text-zinc-300 max-w-[160px] truncate', task.status === 'done' && 'line-through opacity-50')}>{task.title}</span>
               </button>
             );
           })}
@@ -247,7 +247,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                 className="absolute rounded-xl px-2.5 py-1.5 text-left overflow-hidden hover:brightness-95 transition-all z-10"
                 style={{ top: top + 1, left, width: colW, height, backgroundColor: accent }}
               >
-                <p className={cn('text-[12px] font-semibold leading-tight truncate', dark ? 'text-zinc-900' : 'text-white')}>
+                <p className={cn('text-[12px] font-semibold leading-tight truncate', dark ? 'text-zinc-900' : 'text-white', task.status === 'done' && 'line-through opacity-50')}>
                   {task.title}
                 </p>
                 {height >= 40 && (
