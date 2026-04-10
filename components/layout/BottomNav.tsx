@@ -36,7 +36,7 @@ export function BottomNav() {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-pill"
-                    className="absolute inset-[4px] rounded-[14px] bg-zinc-900 dark:bg-zinc-100"
+                    className="absolute inset-[4px] rounded-[14px] bg-white ring-1 ring-black/[0.07] dark:bg-zinc-800 dark:ring-white/[0.08]"
                     transition={{
                       type: 'spring',
                       stiffness: 420,
@@ -52,7 +52,7 @@ export function BottomNav() {
                   className={cn(
                     'relative z-10 transition-all duration-200',
                     isActive
-                      ? 'text-white dark:text-zinc-900'
+                      ? 'text-zinc-900 dark:text-zinc-100'
                       : 'text-zinc-400 dark:text-zinc-500'
                   )}
                 />
@@ -60,7 +60,7 @@ export function BottomNav() {
                   className={cn(
                     'relative z-10 text-[9px] font-semibold tracking-wide leading-none transition-all duration-200',
                     isActive
-                      ? 'text-white dark:text-zinc-900'
+                      ? 'text-zinc-900 dark:text-zinc-100'
                       : 'text-zinc-400 dark:text-zinc-500'
                   )}
                 >

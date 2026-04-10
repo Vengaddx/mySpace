@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Task, Priority, Status, Workstream, Project, RecurrenceType } from '@/types';
 import { cn, formatDate } from '@/lib/utils';
 import { X, Calendar, Clock, Star, Zap, StickyNote, FolderOpen, Bell, RefreshCw, ChevronDown } from 'lucide-react';
@@ -147,19 +148,26 @@ interface TaskDrawerProps {
 export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskDrawerProps) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Task | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     if (task) { setForm({ ...task }); setEditing(false); }
   }, [task]);
 
-  if (!open || !task || !form) return null;
-
   const handleSave = () => {
     if (form) { onSave?.(form); setEditing(false); }
   };
 
-  const workstreamProjects = projects.filter((p) => p.workstream === (editing ? form.workstream : task.workstream));
-  const taskProject = projects.find((p) => p.id === task.projectId);
+  const workstreamProjects = projects.filter((p) => p.workstream === (editing ? form?.workstream : task?.workstream));
+  const taskProject = projects.find((p) => p.id === task?.projectId);
 
   const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div className="space-y-1.5">
@@ -169,56 +177,89 @@ export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskD
   );
 
   return (
-    <>
-      <div
-        className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[2px] z-[60] transition-opacity"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {open && task && form && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/25 dark:bg-black/55 backdrop-blur-[3px] z-[60]"
+            onClick={onClose}
+          />
 
-      <div className="fixed inset-y-0 right-0 z-[70] w-full sm:w-[460px] bg-white dark:bg-zinc-950 shadow-2xl dark:shadow-black/60 flex flex-col transition-colors">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-3">
-            <WorkstreamBadge workstream={task.workstream} />
-            <PriorityBadge priority={task.priority} />
-          </div>
-          <div className="flex items-center gap-2">
-            {!editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-              >
-                Edit
-              </button>
+          {/* Sheet / Drawer */}
+          <motion.div
+            initial={isMobile ? { y: '100%' } : { x: '100%' }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: '100%' } : { x: '100%' }}
+            transition={{ type: 'spring', stiffness: 380, damping: 38, mass: 0.9 }}
+            onTouchStart={isMobile ? (e) => { touchStartY.current = e.touches[0].clientY; } : undefined}
+            onTouchEnd={isMobile ? (e) => {
+              if (touchStartY.current === null) return;
+              const dy = e.changedTouches[0].clientY - touchStartY.current;
+              if (dy > 72) onClose();
+              touchStartY.current = null;
+            } : undefined}
+            className={cn(
+              'fixed z-[70] bg-white dark:bg-zinc-950 shadow-2xl dark:shadow-black/60 flex flex-col',
+              isMobile
+                ? 'bottom-0 left-0 right-0 rounded-t-[28px] max-h-[92svh]'
+                : 'inset-y-0 right-0 w-[460px]'
             )}
-            {editing && (
-              <>
-                <button
-                  onClick={() => setEditing(false)}
-                  className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="text-xs font-medium text-white dark:text-zinc-900 bg-zinc-900 dark:bg-white px-3 py-1.5 rounded-lg hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors"
-                >
-                  Save
-                </button>
-              </>
+          >
+            {/* Drag handle — mobile only */}
+            {isMobile && (
+              <div className="flex justify-center pt-3 pb-0 shrink-0" onClick={onClose}>
+                <div className="w-10 h-[5px] rounded-full bg-zinc-200 dark:bg-zinc-700" />
+              </div>
             )}
-            <button
-              onClick={onClose}
-              className="flex items-center gap-1 pl-2 pr-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-              <span className="text-xs font-medium sm:hidden">Close</span>
-            </button>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-10 sm:pb-6 space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+              <div className="flex items-center gap-3">
+                <WorkstreamBadge workstream={task.workstream} />
+                <PriorityBadge priority={task.priority} />
+              </div>
+              <div className="flex items-center gap-2">
+                {!editing && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
+                {editing && (
+                  <>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="text-xs font-medium text-white dark:text-zinc-900 bg-zinc-900 dark:bg-white px-3 py-1.5 rounded-lg hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors"
+                    >
+                      Save
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={onClose}
+                  className="flex items-center gap-1 pl-2 pr-2.5 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="text-xs font-medium sm:hidden">Close</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 pb-10 space-y-6" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
           {/* Title */}
           <div>
             {editing ? (
@@ -420,8 +461,10 @@ export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskD
             )}
           </Field>
         </div>
-      </div>
+      </motion.div>
     </>
+  )}
+    </AnimatePresence>
   );
 }
 
