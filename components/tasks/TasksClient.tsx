@@ -80,9 +80,6 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
     if (filterPriority !== 'all') result = result.filter((t) => t.priority === filterPriority);
     if (filterStatus !== 'all') {
       result = result.filter((t) => t.status === filterStatus);
-    } else {
-      // Default: hide done tasks unless status filter is explicitly 'done'
-      result = result.filter((t) => t.status !== 'done');
     }
 
     if (search.trim()) {
