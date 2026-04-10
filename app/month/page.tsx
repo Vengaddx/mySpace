@@ -1,4 +1,6 @@
 import { getTasks, getProjects, getMonthlyGoals } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import MonthPageClient from './_client';
 
 export default async function MonthPage() {

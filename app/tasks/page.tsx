@@ -1,4 +1,6 @@
 import { getTasks, getProjects } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { TasksClient } from '@/components/tasks/TasksClient';
 
 export default async function TasksPage() {

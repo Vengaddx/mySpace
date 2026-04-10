@@ -1,4 +1,6 @@
 import { getGoals } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { GoalsClient } from '@/components/goals/GoalsClient';
 

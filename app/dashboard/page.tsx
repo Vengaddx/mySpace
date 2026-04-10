@@ -1,4 +1,6 @@
 import { getTasks } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 import { DashboardClient } from '@/components/dashboard/DashboardClient';
 import { PageContainer } from '@/components/layout/PageContainer';
 
