@@ -1,0 +1,557 @@
+import { Task, Project, WeeklyIntent, MonthlyFocus, MonthlyGoal, Goal } from '@/types';
+
+const today = new Date();
+const fmt = (d: Date) => d.toISOString();
+const addDays = (d: Date, n: number) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+const subDays = (d: Date, n: number) => addDays(d, -n);
+const at = (d: Date, h: number, m = 0) => { const r = new Date(d); r.setHours(h, m, 0, 0); return r; };
+
+// ── Projects ────────────────────────────────────────────────────────────────
+
+export const mockProjects: Project[] = [
+  // Aramco
+  { id: 'p-cpd',          name: 'CPD',                  workstream: 'aramco',   createdAt: fmt(subDays(today, 60)) },
+  { id: 'p-ueh',          name: 'UEH',                  workstream: 'aramco',   createdAt: fmt(subDays(today, 55)) },
+  { id: 'p-governance',   name: 'Group Governance',      workstream: 'aramco',   createdAt: fmt(subDays(today, 50)) },
+  { id: 'p-treasury',     name: 'Group Treasury',        workstream: 'aramco',   createdAt: fmt(subDays(today, 45)) },
+  { id: 'p-norm',         name: 'NORM',                  workstream: 'aramco',   createdAt: fmt(subDays(today, 40)) },
+  { id: 'p-bugbounty',    name: 'Bug Bounty',            workstream: 'aramco',   createdAt: fmt(subDays(today, 35)) },
+  { id: 'p-efs',          name: 'Engage for Success',    workstream: 'aramco',   createdAt: fmt(subDays(today, 30)) },
+
+  // SATORP
+  { id: 'p-sms',          name: 'SMS',                   workstream: 'satorp',   createdAt: fmt(subDays(today, 60)) },
+  { id: 'p-hse',          name: 'HSE Audit',             workstream: 'satorp',   createdAt: fmt(subDays(today, 55)) },
+  { id: 'p-mc',           name: 'Management Committee',  workstream: 'satorp',   createdAt: fmt(subDays(today, 50)) },
+  { id: 'p-commissioning',name: 'Pre-Commissioning',     workstream: 'satorp',   createdAt: fmt(subDays(today, 45)) },
+
+  // PMO
+  { id: 'p-portfolio',    name: 'Portfolio Review',      workstream: 'pmo',      createdAt: fmt(subDays(today, 60)) },
+  { id: 'p-resources',    name: 'Resource Planning',     workstream: 'pmo',      createdAt: fmt(subDays(today, 55)) },
+  { id: 'p-reporting',    name: 'Monthly Reporting',     workstream: 'pmo',      createdAt: fmt(subDays(today, 50)) },
+  { id: 'p-risk',         name: 'Risk Management',       workstream: 'pmo',      createdAt: fmt(subDays(today, 45)) },
+
+  // Personal
+  { id: 'p-health',       name: 'Health & Wellness',     workstream: 'personal', createdAt: fmt(subDays(today, 30)) },
+  { id: 'p-dev',          name: 'Learning & Dev',        workstream: 'personal', createdAt: fmt(subDays(today, 25)) },
+];
+
+// ── Tasks ────────────────────────────────────────────────────────────────────
+
+export const mockTasks: Task[] = [
+  // ── Recurring ────────────────────────────────────────────────────────────
+  {
+    id: 'r-gym',
+    title: 'Gym',
+    category: 'personal',
+    workstream: 'personal',
+    projectId: 'p-health',
+    priority: 'low',
+    status: 'todo',
+    dueDate: fmt(at(today, 7, 0)),
+    durationMinutes: 60,
+    recurrence: 'daily',
+    isWeekFocus: false,
+    isMonthFocus: false,
+    createdAt: fmt(today),
+    updatedAt: fmt(today),
+  },
+  {
+    id: 'r-standup',
+    title: 'Team Standup',
+    category: 'work',
+    workstream: 'aramco',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(at(today, 9, 30)),
+    durationMinutes: 30,
+    recurrence: 'weekdays',
+    isWeekFocus: false,
+    isMonthFocus: false,
+    createdAt: fmt(today),
+    updatedAt: fmt(today),
+  },
+  // ── Aramco / CPD ────────────────────────────────────────────────────────
+  {
+    id: 't1',
+    title: 'Prepare WSR for CPD Steering Committee',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-cpd',
+    priority: 'critical',
+    status: 'in_progress',
+    dueDate: fmt(at(today, 9, 0)),
+    reminderAt: fmt(at(today, 9, 0)),
+    isWeekFocus: true,
+    isMonthFocus: true,
+    notes: 'Coordinate with Ahmed on the FEED section. Include updated risk register.',
+    tags: ['reporting', 'weekly'],
+    createdAt: fmt(subDays(today, 5)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+  {
+    id: 't4',
+    title: 'Follow up: Customer Meeting Action Items',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-cpd',
+    priority: 'high',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 1), 10, 0)),
+    isWeekFocus: true,
+    isMonthFocus: false,
+    tags: ['follow-up', 'customer'],
+    createdAt: fmt(subDays(today, 4)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+  {
+    id: 't6',
+    title: 'Review CPD FEED Cost Estimate',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-cpd',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 5), 9, 0)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['cost', 'feed'],
+    createdAt: fmt(subDays(today, 2)),
+    updatedAt: fmt(subDays(today, 2)),
+  },
+
+  // ── Aramco / UEH ────────────────────────────────────────────────────────
+  {
+    id: 't16',
+    title: 'Review MOM from UEH Workshop',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-ueh',
+    priority: 'high',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 2), 9, 30)),
+    isWeekFocus: true,
+    isMonthFocus: false,
+    notes: 'Ensure all action items have clear owners and deadlines.',
+    tags: ['review', 'sign-off'],
+    createdAt: fmt(subDays(today, 3)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+  {
+    id: 't17',
+    title: 'UEH Vendor Qualification Review',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-ueh',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 6), 16, 0)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['vendor', 'qualification'],
+    createdAt: fmt(subDays(today, 2)),
+    updatedAt: fmt(subDays(today, 2)),
+  },
+
+  // ── Aramco / Group Governance ─────────────────────────────────────────
+  {
+    id: 't18',
+    title: 'Follow up: Group Governance Workshop Schedule',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-governance',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 4), 10, 0)),
+    isWeekFocus: false,
+    isMonthFocus: false,
+    tags: ['governance', 'workshop'],
+    createdAt: fmt(subDays(today, 1)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+
+  // ── Aramco / Treasury ─────────────────────────────────────────────────
+  {
+    id: 't20',
+    title: 'Close Treasury funding assumptions',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-treasury',
+    priority: 'high',
+    status: 'done',
+    dueDate: fmt(subDays(today, 4)),
+    completionDate: fmt(subDays(today, 4)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['finance', 'approval'],
+    createdAt: fmt(subDays(today, 8)),
+    updatedAt: fmt(subDays(today, 4)),
+  },
+
+  // ── Aramco / NORM ─────────────────────────────────────────────────────
+  {
+    id: 't21',
+    title: 'NORM inspection tracker refresh',
+    category: 'work',
+    workstream: 'aramco',
+    projectId: 'p-norm',
+    priority: 'medium',
+    status: 'in_progress',
+    dueDate: fmt(at(addDays(today, 6), 14, 30)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    notes: 'Waiting on final field photos from inspection lead.',
+    tags: ['inspection', 'tracker'],
+    createdAt: fmt(subDays(today, 4)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+
+  // ── SATORP / HSE Audit ────────────────────────────────────────────────
+  {
+    id: 't8',
+    title: 'SATORP HSE Audit Formal Response',
+    category: 'work',
+    workstream: 'satorp',
+    projectId: 'p-hse',
+    priority: 'critical',
+    status: 'todo',
+    dueDate: fmt(subDays(today, 2)),
+    isWeekFocus: true,
+    isMonthFocus: false,
+    notes: 'Critical: This is overdue. Escalate immediately.',
+    tags: ['hse', 'audit'],
+    createdAt: fmt(subDays(today, 10)),
+    updatedAt: fmt(subDays(today, 3)),
+  },
+
+  // ── SATORP / Pre-Commissioning ────────────────────────────────────────
+  {
+    id: 't5',
+    title: 'P6 Schedule Update — Pre-Commissioning',
+    category: 'work',
+    workstream: 'satorp',
+    projectId: 'p-commissioning',
+    priority: 'high',
+    status: 'in_progress',
+    dueDate: fmt(at(addDays(today, 3), 14, 0)),
+    isWeekFocus: true,
+    isMonthFocus: false,
+    notes: 'Waiting on field data from Khalid.',
+    tags: ['schedule', 'p6'],
+    createdAt: fmt(subDays(today, 6)),
+    updatedAt: fmt(today),
+  },
+  {
+    id: 't14',
+    title: 'Commissioning Plan Feedback',
+    category: 'work',
+    workstream: 'satorp',
+    projectId: 'p-commissioning',
+    priority: 'high',
+    status: 'done',
+    dueDate: fmt(subDays(today, 1)),
+    completionDate: fmt(subDays(today, 1)),
+    isWeekFocus: false,
+    isMonthFocus: false,
+    tags: ['commissioning', 'review'],
+    createdAt: fmt(subDays(today, 9)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+
+  // ── SATORP / Management Committee ────────────────────────────────────
+  {
+    id: 't19',
+    title: 'Review MOM from SATORP Site Meeting',
+    category: 'work',
+    workstream: 'satorp',
+    projectId: 'p-mc',
+    priority: 'high',
+    status: 'todo',
+    dueDate: fmt(at(today, 11, 30)),
+    isWeekFocus: true,
+    isMonthFocus: false,
+    tags: ['review', 'committee'],
+    createdAt: fmt(subDays(today, 3)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+
+  // ── SATORP / SMS ─────────────────────────────────────────────────────
+  {
+    id: 't22',
+    title: 'SMS action closure review',
+    category: 'work',
+    workstream: 'satorp',
+    projectId: 'p-sms',
+    priority: 'critical',
+    status: 'todo',
+    dueDate: fmt(at(today, 14, 0)),
+    reminderAt: fmt(at(today, 14, 0)),
+    isWeekFocus: true,
+    isMonthFocus: true,
+    notes: 'Follow up with operations before 3 PM.',
+    tags: ['safety', 'follow-up'],
+    createdAt: fmt(subDays(today, 5)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+
+  // ── PMO / Monthly Reporting ───────────────────────────────────────────
+  {
+    id: 't3',
+    title: 'Submit PMO Monthly Progress Report',
+    category: 'work',
+    workstream: 'pmo',
+    projectId: 'p-reporting',
+    priority: 'critical',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 2), 11, 0)),
+    isWeekFocus: true,
+    isMonthFocus: true,
+    notes: 'Use the latest dashboard snapshot from SharePoint.',
+    tags: ['pmo', 'reporting'],
+    createdAt: fmt(subDays(today, 7)),
+    updatedAt: fmt(subDays(today, 2)),
+  },
+  {
+    id: 't15',
+    title: 'PMO KPI Dashboard Update',
+    category: 'work',
+    workstream: 'pmo',
+    projectId: 'p-reporting',
+    priority: 'high',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 1), 15, 30)),
+    isWeekFocus: true,
+    isMonthFocus: true,
+    tags: ['kpi', 'dashboard'],
+    createdAt: fmt(subDays(today, 2)),
+    updatedAt: fmt(subDays(today, 2)),
+  },
+
+  // ── PMO / Risk Management ─────────────────────────────────────────────
+  {
+    id: 't7',
+    title: 'PMO Risk Register Update',
+    category: 'work',
+    workstream: 'pmo',
+    projectId: 'p-risk',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(at(addDays(today, 4), 15, 0)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['risk', 'pmo'],
+    createdAt: fmt(subDays(today, 3)),
+    updatedAt: fmt(subDays(today, 3)),
+  },
+
+  // ── PMO / Portfolio Review ────────────────────────────────────────────
+  {
+    id: 't9',
+    title: 'Schedule Q2 PMO Steering Committee',
+    category: 'work',
+    workstream: 'pmo',
+    projectId: 'p-portfolio',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(addDays(today, 7)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['meeting', 'steering'],
+    createdAt: fmt(subDays(today, 1)),
+    updatedAt: fmt(subDays(today, 1)),
+  },
+  {
+    id: 't24',
+    title: 'Portfolio governance action log',
+    category: 'work',
+    workstream: 'pmo',
+    projectId: 'p-portfolio',
+    priority: 'high',
+    status: 'in_progress',
+    dueDate: fmt(at(addDays(today, 5), 11, 30)),
+    isWeekFocus: true,
+    isMonthFocus: false,
+    notes: 'Waiting for updated actions from steering office.',
+    tags: ['governance', 'actions'],
+    createdAt: fmt(subDays(today, 4)),
+    updatedAt: fmt(today),
+  },
+
+  // ── PMO / Resource Planning ────────────────────────────────────────────
+  {
+    id: 't23',
+    title: 'Resource capacity alignment',
+    category: 'work',
+    workstream: 'pmo',
+    projectId: 'p-resources',
+    priority: 'medium',
+    status: 'done',
+    dueDate: fmt(subDays(today, 3)),
+    completionDate: fmt(subDays(today, 2)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['capacity', 'planning'],
+    createdAt: fmt(subDays(today, 7)),
+    updatedAt: fmt(subDays(today, 2)),
+  },
+
+  // ── Personal / Health & Wellness ─────────────────────────────────────
+  {
+    id: 't10',
+    title: 'Annual Medical Checkup',
+    category: 'personal',
+    workstream: 'personal',
+    projectId: 'p-health',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: fmt(addDays(today, 10)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['health'],
+    createdAt: fmt(subDays(today, 5)),
+    updatedAt: fmt(subDays(today, 5)),
+  },
+  {
+    id: 't11',
+    title: 'Renew Car Registration',
+    category: 'personal',
+    workstream: 'personal',
+    priority: 'high',
+    status: 'todo',
+    dueDate: fmt(subDays(today, 1)),
+    isWeekFocus: false,
+    isMonthFocus: false,
+    tags: ['personal', 'admin'],
+    createdAt: fmt(subDays(today, 14)),
+    updatedAt: fmt(subDays(today, 14)),
+  },
+  {
+    id: 't12',
+    title: 'Complete gym plan reset',
+    category: 'personal',
+    workstream: 'personal',
+    projectId: 'p-health',
+    priority: 'low',
+    status: 'done',
+    dueDate: fmt(subDays(today, 5)),
+    completionDate: fmt(subDays(today, 5)),
+    isWeekFocus: false,
+    isMonthFocus: true,
+    tags: ['wellness'],
+    createdAt: fmt(subDays(today, 9)),
+    updatedAt: fmt(subDays(today, 5)),
+  },
+
+  // ── Personal / Learning & Development ────────────────────────────────
+  {
+    id: 't13',
+    title: 'Complete Leadership Training Module',
+    category: 'personal',
+    workstream: 'personal',
+    projectId: 'p-dev',
+    priority: 'low',
+    status: 'in_progress',
+    dueDate: fmt(addDays(today, 14)),
+    isWeekFocus: false,
+    isMonthFocus: false,
+    tags: ['training', 'development'],
+    createdAt: fmt(subDays(today, 8)),
+    updatedAt: fmt(subDays(today, 2)),
+  },
+
+  // ── Historical tasks for dashboard rings ─────────────────────────────────
+
+  // 3 weeks ago
+  { id: 'h1',  title: 'CPD gate review preparation',          category: 'work', workstream: 'aramco',   projectId: 'p-cpd',          priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 21)), completionDate: fmt(subDays(today, 21)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 25)), updatedAt: fmt(subDays(today, 21)) },
+  { id: 'h2',  title: 'UEH contractor evaluation',            category: 'work', workstream: 'aramco',   projectId: 'p-ueh',          priority: 'medium',   status: 'done',        dueDate: fmt(subDays(today, 21)), completionDate: fmt(subDays(today, 21)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 24)), updatedAt: fmt(subDays(today, 21)) },
+  { id: 'h3',  title: 'SATORP site inspection report',        category: 'work', workstream: 'satorp',   projectId: 'p-mc',           priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 20)), completionDate: fmt(subDays(today, 20)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 23)), updatedAt: fmt(subDays(today, 20)) },
+  { id: 'h4',  title: 'PMO Q1 portfolio summary',             category: 'work', workstream: 'pmo',      projectId: 'p-portfolio',    priority: 'critical', status: 'done',        dueDate: fmt(subDays(today, 19)), completionDate: fmt(subDays(today, 19)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 23)), updatedAt: fmt(subDays(today, 19)) },
+  { id: 'h5',  title: 'PMO resource onboarding review',       category: 'work', workstream: 'pmo',      projectId: 'p-resources',    priority: 'medium',   status: 'done',        dueDate: fmt(subDays(today, 19)), completionDate: fmt(subDays(today, 19)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 22)), updatedAt: fmt(subDays(today, 19)) },
+  { id: 'h6',  title: 'Weekly gym session plan',              category: 'personal', workstream: 'personal', projectId: 'p-health',   priority: 'low',      status: 'done',        dueDate: fmt(subDays(today, 18)), completionDate: fmt(subDays(today, 18)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 20)), updatedAt: fmt(subDays(today, 18)) },
+  { id: 'h7',  title: 'NORM Q1 baseline finalization',        category: 'work', workstream: 'aramco',   projectId: 'p-norm',         priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 17)), completionDate: fmt(subDays(today, 17)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 21)), updatedAt: fmt(subDays(today, 17)) },
+
+  // 2 weeks ago
+  { id: 'h8',  title: 'CPD FEED scope alignment',             category: 'work', workstream: 'aramco',   projectId: 'p-cpd',          priority: 'critical', status: 'done',        dueDate: fmt(subDays(today, 14)), completionDate: fmt(subDays(today, 14)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 16)), updatedAt: fmt(subDays(today, 14)) },
+  { id: 'h9',  title: 'Group governance charter update',      category: 'work', workstream: 'aramco',   projectId: 'p-governance',   priority: 'medium',   status: 'done',        dueDate: fmt(subDays(today, 14)), completionDate: fmt(subDays(today, 14)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 16)), updatedAt: fmt(subDays(today, 14)) },
+  { id: 'h10', title: 'SATORP HSE corrective actions log',    category: 'work', workstream: 'satorp',   projectId: 'p-hse',          priority: 'critical', status: 'done',        dueDate: fmt(subDays(today, 13)), completionDate: fmt(subDays(today, 13)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 15)), updatedAt: fmt(subDays(today, 13)) },
+  { id: 'h11', title: 'Pre-commissioning punch list review',  category: 'work', workstream: 'satorp',   projectId: 'p-commissioning',priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 13)), completionDate: fmt(subDays(today, 13)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 15)), updatedAt: fmt(subDays(today, 13)) },
+  { id: 'h12', title: 'Risk register Q2 baseline',            category: 'work', workstream: 'pmo',      projectId: 'p-risk',         priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 12)), completionDate: fmt(subDays(today, 12)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 14)), updatedAt: fmt(subDays(today, 12)) },
+  { id: 'h13', title: 'Leadership module chapter 3',          category: 'personal', workstream: 'personal', projectId: 'p-dev',      priority: 'low',      status: 'done',        dueDate: fmt(subDays(today, 12)), completionDate: fmt(subDays(today, 12)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 14)), updatedAt: fmt(subDays(today, 12)) },
+  { id: 'h14', title: 'Bug bounty scoping session',           category: 'work', workstream: 'aramco',   projectId: 'p-bugbounty',    priority: 'medium',   status: 'done',        dueDate: fmt(subDays(today, 11)), completionDate: fmt(subDays(today, 11)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 13)), updatedAt: fmt(subDays(today, 11)) },
+  { id: 'h15', title: 'SATORP MC agenda preparation',         category: 'work', workstream: 'satorp',   projectId: 'p-mc',           priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 10)), completionDate: fmt(subDays(today, 10)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 12)), updatedAt: fmt(subDays(today, 10)) },
+  { id: 'h16', title: 'Health check & biometrics',            category: 'personal', workstream: 'personal', projectId: 'p-health',   priority: 'medium',   status: 'done',        dueDate: fmt(subDays(today, 10)), completionDate: fmt(subDays(today, 10)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 11)), updatedAt: fmt(subDays(today, 10)) },
+
+  // Last week
+  { id: 'h17', title: 'UEH technical review sign-off',        category: 'work', workstream: 'aramco',   projectId: 'p-ueh',          priority: 'high',     status: 'done',        dueDate: fmt(subDays(today, 7)),  completionDate: fmt(subDays(today, 7)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 9)),  updatedAt: fmt(subDays(today, 7)) },
+  { id: 'h18', title: 'Group treasury cash flow review',      category: 'work', workstream: 'aramco',   projectId: 'p-treasury',     priority: 'medium',   status: 'done',        dueDate: fmt(subDays(today, 7)),  completionDate: fmt(subDays(today, 7)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 8)),  updatedAt: fmt(subDays(today, 7)) },
+  { id: 'h19', title: 'SMS audit trail check',                category: 'work', workstream: 'satorp',   projectId: 'p-sms',          priority: 'critical', status: 'done',        dueDate: fmt(subDays(today, 6)),  completionDate: fmt(subDays(today, 6)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 8)),  updatedAt: fmt(subDays(today, 6)) },
+  { id: 'h20', title: 'PMO steering pack compilation',        category: 'work', workstream: 'pmo',      projectId: 'p-portfolio',    priority: 'critical', status: 'done',        dueDate: fmt(subDays(today, 6)),  completionDate: fmt(subDays(today, 6)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 8)),  updatedAt: fmt(subDays(today, 6)) },
+  { id: 'h21', title: 'Engage for success pulse survey',      category: 'work', workstream: 'aramco',   projectId: 'p-efs',          priority: 'low',      status: 'done',        dueDate: fmt(subDays(today, 6)),  completionDate: fmt(subDays(today, 6)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 7)),  updatedAt: fmt(subDays(today, 6)) },
+  { id: 'h22', title: 'Personal dev reading — systems thinking', category: 'personal', workstream: 'personal', projectId: 'p-dev',  priority: 'low',      status: 'done',        dueDate: fmt(subDays(today, 6)),  completionDate: fmt(subDays(today, 6)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 7)),  updatedAt: fmt(subDays(today, 6)) },
+
+  // Coming weeks (future tasks)
+  { id: 'h23', title: 'CPD FEED peer review session',         category: 'work', workstream: 'aramco',   projectId: 'p-cpd',          priority: 'high',     status: 'todo',        dueDate: fmt(addDays(today, 8)),  isWeekFocus: false, isMonthFocus: true,  createdAt: fmt(subDays(today, 3)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h24', title: 'NORM compliance gap assessment',       category: 'work', workstream: 'aramco',   projectId: 'p-norm',         priority: 'medium',   status: 'todo',        dueDate: fmt(addDays(today, 9)),  isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 2)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h25', title: 'SATORP monthly operations review',     category: 'work', workstream: 'satorp',   projectId: 'p-mc',           priority: 'high',     status: 'todo',        dueDate: fmt(addDays(today, 9)),  isWeekFocus: false, isMonthFocus: true,  createdAt: fmt(subDays(today, 2)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h26', title: 'PMO portfolio health check',           category: 'work', workstream: 'pmo',      projectId: 'p-portfolio',    priority: 'high',     status: 'todo',        dueDate: fmt(addDays(today, 11)), isWeekFocus: false, isMonthFocus: true,  createdAt: fmt(subDays(today, 2)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h27', title: 'Personal finance monthly review',      category: 'personal', workstream: 'personal', priority: 'medium',    status: 'todo',        dueDate: fmt(addDays(today, 12)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 1)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h28', title: 'Bug bounty report submission',         category: 'work', workstream: 'aramco',   projectId: 'p-bugbounty',    priority: 'high',     status: 'todo',        dueDate: fmt(addDays(today, 13)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(subDays(today, 1)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h29', title: 'HSE training completion certification', category: 'work', workstream: 'satorp',  projectId: 'p-hse',          priority: 'medium',   status: 'todo',        dueDate: fmt(addDays(today, 15)), isWeekFocus: false, isMonthFocus: true,  createdAt: fmt(subDays(today, 1)), updatedAt: fmt(subDays(today, 1)) },
+  { id: 'h30', title: 'Q2 resource plan finalization',        category: 'work', workstream: 'pmo',      projectId: 'p-resources',    priority: 'critical', status: 'todo',        dueDate: fmt(addDays(today, 16)), isWeekFocus: false, isMonthFocus: true,  createdAt: fmt(today),             updatedAt: fmt(today) },
+  { id: 'h31', title: 'Governance policy sign-off',           category: 'work', workstream: 'aramco',   projectId: 'p-governance',   priority: 'high',     status: 'todo',        dueDate: fmt(addDays(today, 18)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(today),             updatedAt: fmt(today) },
+  { id: 'h32', title: 'Pre-commissioning system test',        category: 'work', workstream: 'satorp',   projectId: 'p-commissioning',priority: 'critical', status: 'todo',        dueDate: fmt(addDays(today, 19)), isWeekFocus: false, isMonthFocus: true,  createdAt: fmt(today),             updatedAt: fmt(today) },
+  { id: 'h33', title: 'Leadership training final assessment',  category: 'personal', workstream: 'personal', projectId: 'p-dev',     priority: 'medium',   status: 'todo',        dueDate: fmt(addDays(today, 20)), isWeekFocus: false, isMonthFocus: false, createdAt: fmt(today),             updatedAt: fmt(today) },
+];
+
+export const mockWeeklyIntent: WeeklyIntent = {
+  id: 'wi1',
+  weekStart: fmt(today),
+  objectives: '1. Close the WSR for CPD by EOD Tuesday\n2. Submit PMO monthly report\n3. Resolve SATORP HSE audit findings',
+  mustGetDone: 'WSR submission, HSE audit response, KPI dashboard update',
+  watchouts: 'SATORP HSE audit is overdue — immediate action required. CPD FEED cost estimate deadline approaching.',
+};
+
+const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+// Helper to produce YYYY-MM-DD strings for mock check-ins
+const ds = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+export const mockGoalsList: Goal[] = [
+  {
+    id: 'goal-1', month: thisMonth, title: 'Go to gym daily', emoji: '💪', color: '#F2296B', type: 'habit',
+    checkins: [ds(subDays(today,1)), ds(subDays(today,2)), ds(subDays(today,3)), ds(subDays(today,5)), ds(subDays(today,6)), ds(subDays(today,7))],
+    createdAt: fmt(subDays(today, 10)),
+  },
+  {
+    id: 'goal-2', month: thisMonth, title: 'Sleep before 10pm', emoji: '😴', color: '#00C1FF', type: 'habit',
+    checkins: [ds(subDays(today,1)), ds(subDays(today,3)), ds(subDays(today,4)), ds(subDays(today,6))],
+    createdAt: fmt(subDays(today, 10)),
+  },
+  {
+    id: 'goal-3', month: thisMonth, title: 'Read 20 pages daily', emoji: '📚', color: '#AEDD00', type: 'habit',
+    checkins: [ds(subDays(today,1)), ds(subDays(today,2))],
+    createdAt: fmt(subDays(today, 10)),
+  },
+  {
+    id: 'goal-4', month: thisMonth, title: 'Lose 3 kgs', emoji: '⚖️', color: '#FF9900', type: 'milestone',
+    target: 3, unit: 'kgs', current: 1,
+    checkins: [],
+    createdAt: fmt(subDays(today, 10)),
+  },
+];
+
+export const mockGoals: MonthlyGoal[] = [
+  { id: 'g1', month: thisMonth, title: 'Advance CPD FEED to approval gate', workstream: 'aramco',   progress: 50, createdAt: fmt(today) },
+  { id: 'g2', month: thisMonth, title: 'Complete SATORP pre-commissioning plan', workstream: 'satorp',   progress: 25, createdAt: fmt(today) },
+  { id: 'g3', month: thisMonth, title: 'Establish PMO Q2 reporting cadence',  workstream: 'pmo',      progress: 75, createdAt: fmt(today) },
+  { id: 'g4', month: thisMonth, title: 'Complete leadership training module',  workstream: 'personal', progress: 100, createdAt: fmt(today) },
+  { id: 'g5', month: thisMonth, title: 'Maintain weekly exercise routine',     workstream: 'personal', progress: 0,  createdAt: fmt(today) },
+];
+
+export const mockMonthlyFocus: MonthlyFocus = {
+  id: 'mf1',
+  month: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`,
+  focusAreas: '1. Advance Aramco CPD FEED to approval gate\n2. Complete SATORP pre-commissioning planning\n3. Establish PMO Q2 reporting cadence',
+  majorCommitments: 'PMO Steering Committee Q2, CPD FEED Gate Review, SATORP HSE Compliance',
+  risks: 'Resource constraints on SATORP schedule\nAramco budget approval pending\nKey SME availability for PMO review',
+  personalGoals: 'Complete leadership training module\nSchedule annual medical checkup\nMaintain weekly exercise routine',
+};
