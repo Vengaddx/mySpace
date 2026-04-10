@@ -17,11 +17,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-3"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-6"
       style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
     >
       {/* Compact liquid glass pill */}
-      <div className="liquid-glass relative rounded-[20px] overflow-hidden">
+      <div className="liquid-glass relative rounded-[20px] overflow-hidden w-full max-w-[260px]">
         <div className="flex items-stretch">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');

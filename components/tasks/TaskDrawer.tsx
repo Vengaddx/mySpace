@@ -171,11 +171,11 @@ export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskD
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[2px] z-40 transition-opacity"
+        className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[2px] z-[60] transition-opacity"
         onClick={onClose}
       />
 
-      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[460px] bg-white dark:bg-zinc-950 shadow-2xl dark:shadow-black/60 flex flex-col transition-colors">
+      <div className="fixed inset-y-0 right-0 z-[70] w-full sm:w-[460px] bg-white dark:bg-zinc-950 shadow-2xl dark:shadow-black/60 flex flex-col transition-colors">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
@@ -209,15 +209,16 @@ export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskD
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-1 pl-2 pr-3 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <X className="w-4 h-4" />
+              <span className="text-xs font-medium sm:hidden">Close</span>
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 pb-10 sm:pb-6 space-y-6">
           {/* Title */}
           <div>
             {editing ? (

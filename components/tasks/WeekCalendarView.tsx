@@ -152,8 +152,10 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   const [panelProjectId, setPanelProjectId] = useState<string | null>(null);
   const [inboxHov,       setInboxHov]       = useState(false);
 
-  const draggingId  = useRef<string | null>(null);
-  const scrollRef   = useRef<HTMLDivElement>(null);
+  const draggingId   = useRef<string | null>(null);
+  const scrollRef    = useRef<HTMLDivElement>(null);
+  const swipeStartX  = useRef<number | null>(null);
+  const swipeStartY  = useRef<number | null>(null);
 
   // Detect mobile viewport
   useEffect(() => {
@@ -275,10 +277,28 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex gap-3" style={{ height: 'calc(100vh - 180px)', minHeight: 480 }}>
+    <div className="flex gap-3" style={{ height: 'calc(100svh - 220px)', minHeight: 400 }}>
 
       {/* ── Calendar column ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-auto md:overflow-x-visible">
+      <div
+        className="flex-1 flex flex-col min-w-0 overflow-x-auto md:overflow-x-visible"
+        onTouchStart={isMobile ? (e) => {
+          swipeStartX.current = e.touches[0].clientX;
+          swipeStartY.current = e.touches[0].clientY;
+        } : undefined}
+        onTouchEnd={isMobile ? (e) => {
+          if (swipeStartX.current === null || swipeStartY.current === null) return;
+          const dx = e.changedTouches[0].clientX - swipeStartX.current;
+          const dy = e.changedTouches[0].clientY - swipeStartY.current;
+          // Only trigger if horizontal swipe > 60px and more horizontal than vertical
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            if (dx < 0) setMobileDayOffset(o => o + 1);
+            else setMobileDayOffset(o => o - 1);
+          }
+          swipeStartX.current = null;
+          swipeStartY.current = null;
+        } : undefined}
+      >
 
         {/* Navigation */}
         <div className="flex items-center gap-2 mb-3 shrink-0">
@@ -347,7 +367,11 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
         </div>
 
         {/* ── Single scroll container: sticky header + body share same grid width ── */}
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 overflow-y-auto"
+          style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } as React.CSSProperties}
+        >
           <div className="flex">
 
             {/* Time gutter column */}
