@@ -17,8 +17,11 @@ export function TopHeader() {
   const { theme, toggle: toggleTheme } = useTheme();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-zinc-200/70 dark:border-zinc-800/70">
-      <div className="h-full px-4 sm:px-6 lg:px-10 flex items-center justify-between">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-zinc-200/70 dark:border-zinc-800/70"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <div className="h-14 px-4 sm:px-6 lg:px-10 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Icon: 2×2 grid, top-left cell highlighted */}

@@ -17,8 +17,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-6"
-      style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-6 pb-2"
+      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
     >
       {/* Compact liquid glass pill */}
       <div className="liquid-glass relative rounded-[20px] overflow-hidden w-full max-w-[260px]">

@@ -113,9 +113,9 @@ export function QuickAddTask({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[2px] z-40" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:w-[500px] w-full">
-        <div className="bg-white dark:bg-zinc-950 rounded-t-3xl sm:rounded-2xl shadow-2xl dark:shadow-black/60 border border-zinc-100 dark:border-zinc-800 p-6">
+      <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[2px] z-[60]" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-[70] sm:w-[500px] w-full">
+        <div className="bg-white dark:bg-zinc-950 rounded-t-3xl sm:rounded-2xl shadow-2xl dark:shadow-black/60 border border-zinc-100 dark:border-zinc-800 p-6" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Quick Add Task</h3>
             <button
