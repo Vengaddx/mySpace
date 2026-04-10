@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { mockTasks, mockProjects } from '@/lib/mock-data';
 import { Task } from '@/types';
-import { AppShell } from '@/components/layout/AppShell';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TaskDrawer } from '@/components/tasks/TaskDrawer';
@@ -25,8 +24,7 @@ export default function WeekPage() {
   };
 
   return (
-    <AppShell>
-      <PageContainer>
+    <PageContainer>
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -54,6 +52,5 @@ export default function WeekPage() {
           projects={mockProjects}
         />
       </PageContainer>
-    </AppShell>
   );
 }

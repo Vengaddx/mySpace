@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AppShell } from '@/components/layout/AppShell';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { useTheme } from '@/components/layout/ThemeProvider';
@@ -25,8 +24,7 @@ export default function SettingsPage() {
   const selectCls = "w-full text-xs text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded-xl px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-400 transition-colors";
 
   return (
-    <AppShell>
-      <PageContainer>
+    <PageContainer>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">Settings</h1>
@@ -167,7 +165,6 @@ export default function SettingsPage() {
           </button>
         </div>
       </PageContainer>
-    </AppShell>
   );
 }
 

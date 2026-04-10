@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { mockTasks, mockProjects, mockGoals } from '@/lib/mock-data';
 import { Task, MonthlyGoal } from '@/types';
-import { AppShell } from '@/components/layout/AppShell';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { MonthCalendarView } from '@/components/tasks/MonthCalendarView';
 import { MonthlyGoalsPanel } from '@/components/tasks/MonthlyGoalsPanel';
@@ -34,8 +33,7 @@ export default function MonthPage() {
   };
 
   return (
-    <AppShell>
-      <PageContainer>
+    <PageContainer>
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -75,6 +73,5 @@ export default function MonthPage() {
           projects={mockProjects}
         />
       </PageContainer>
-    </AppShell>
   );
 }

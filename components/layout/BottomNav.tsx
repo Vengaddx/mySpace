@@ -17,11 +17,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4"
-      style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-3"
+      style={{ paddingBottom: 'max(10px, env(safe-area-inset-bottom))' }}
     >
-      {/* Liquid glass pill */}
-      <div className="liquid-glass relative rounded-[26px] overflow-hidden">
+      {/* Compact liquid glass pill */}
+      <div className="liquid-glass relative rounded-[20px] overflow-hidden">
         <div className="flex items-stretch">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -30,13 +30,13 @@ export function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="relative flex-1 flex flex-col items-center justify-center gap-1 py-3 px-2 select-none"
+                className="relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 px-1 select-none"
               >
-                {/* Liquid sliding pill indicator */}
+                {/* Liquid sliding pill */}
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-pill"
-                    className="absolute inset-[6px] rounded-[18px] bg-zinc-900 dark:bg-zinc-100"
+                    className="absolute inset-[4px] rounded-[14px] bg-zinc-900 dark:bg-zinc-100"
                     transition={{
                       type: 'spring',
                       stiffness: 420,
@@ -47,7 +47,7 @@ export function BottomNav() {
                 )}
 
                 <Icon
-                  size={20}
+                  size={17}
                   strokeWidth={isActive ? 2.2 : 1.7}
                   className={cn(
                     'relative z-10 transition-all duration-200',
@@ -58,7 +58,7 @@ export function BottomNav() {
                 />
                 <span
                   className={cn(
-                    'relative z-10 text-[10px] font-semibold tracking-wide transition-all duration-200',
+                    'relative z-10 text-[9px] font-semibold tracking-wide leading-none transition-all duration-200',
                     isActive
                       ? 'text-white dark:text-zinc-900'
                       : 'text-zinc-400 dark:text-zinc-500'

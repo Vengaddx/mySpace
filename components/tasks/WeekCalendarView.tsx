@@ -26,6 +26,7 @@ function getWeekStart(d: Date): Date {
   return r;
 }
 function addDays(d: Date, n: number): Date { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function startOfDay(d: Date): Date { const r = new Date(d); r.setHours(0, 0, 0, 0); return r; }
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
@@ -140,7 +141,9 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   const projectMap  = new Map(projects.map(p => [p.id, p]));
   const todayDate   = useMemo(() => new Date(), []);
 
-  const [weekOffset, setWeekOffset]     = useState(0);
+  const [weekOffset,      setWeekOffset]      = useState(0);
+  const [mobileDayOffset, setMobileDayOffset] = useState(0); // mobile: ±days from today
+  const [isMobile,        setIsMobile]        = useState(false);
   const [dropTarget, setDropTarget]     = useState<DropTarget | null>(null);
   const [nowPx,      setNowPx]          = useState(getNowPx);
   const [isDragging, setIsDragging]     = useState(false);
@@ -152,19 +155,37 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   const draggingId  = useRef<string | null>(null);
   const scrollRef   = useRef<HTMLDivElement>(null);
 
+  // Detect mobile viewport
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = Math.max(0, (new Date().getHours() - START_HOUR - 1.5) * HOUR_HEIGHT);
     }
-  }, [weekOffset]);
+  }, [weekOffset, mobileDayOffset]);
 
   useEffect(() => {
     const id = setInterval(() => setNowPx(getNowPx()), 60_000);
     return () => clearInterval(id);
   }, []);
 
+  // Desktop: 7-day week view
   const weekStart = useMemo(() => addDays(getWeekStart(new Date()), weekOffset * 7), [weekOffset]);
-  const days      = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const weekDays  = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+
+  // Mobile: 3-day view (yesterday → today → tomorrow shifted by mobileDayOffset)
+  const mobileDays = useMemo(() => {
+    const center = startOfDay(addDays(new Date(), mobileDayOffset));
+    return [-1, 0, 1].map(d => addDays(center, d));
+  }, [mobileDayOffset]);
+
+  const days    = isMobile ? mobileDays : weekDays;
+  const numCols = days.length; // 3 on mobile, 7 on desktop
 
   const tasksByDay = useMemo(() => days.map(day => {
     const result: Task[] = [];
@@ -262,15 +283,15 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
         {/* Navigation */}
         <div className="flex items-center gap-2 mb-3 shrink-0">
           <button
-            onClick={() => setWeekOffset(o => o - 1)}
-            onDragOver={isDragging ? e => { e.preventDefault(); setPrevHov(true); setNextHov(false); setDropTarget(null); } : undefined}
-            onDragLeave={isDragging ? () => setPrevHov(false) : undefined}
-            onDrop={isDragging ? e => handleCrossWeekDrop(e, -1) : undefined}
+            onClick={() => isMobile ? setMobileDayOffset(o => o - 1) : setWeekOffset(o => o - 1)}
+            onDragOver={isDragging && !isMobile ? e => { e.preventDefault(); setPrevHov(true); setNextHov(false); setDropTarget(null); } : undefined}
+            onDragLeave={isDragging && !isMobile ? () => setPrevHov(false) : undefined}
+            onDrop={isDragging && !isMobile ? e => handleCrossWeekDrop(e, -1) : undefined}
             className={cn(
               'w-7 h-7 flex items-center justify-center rounded-lg border transition-all duration-150',
               prevHov
                 ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 scale-110'
-                : isDragging
+                : isDragging && !isMobile
                 ? 'border-dashed border-zinc-400 dark:border-zinc-500 text-zinc-500 dark:text-zinc-400 animate-pulse'
                 : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
@@ -278,20 +299,23 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
             <ChevronLeft size={14} />
           </button>
 
-          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 min-w-[140px] text-center select-none">
-            {formatRange(days[0], days[6])}
+          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 min-w-[120px] text-center select-none">
+            {isMobile
+              ? days[1].toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: days[1].getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })
+              : formatRange(days[0], days[days.length - 1])
+            }
           </span>
 
           <button
-            onClick={() => setWeekOffset(o => o + 1)}
-            onDragOver={isDragging ? e => { e.preventDefault(); setNextHov(true); setPrevHov(false); setDropTarget(null); } : undefined}
-            onDragLeave={isDragging ? () => setNextHov(false) : undefined}
-            onDrop={isDragging ? e => handleCrossWeekDrop(e, 1) : undefined}
+            onClick={() => isMobile ? setMobileDayOffset(o => o + 1) : setWeekOffset(o => o + 1)}
+            onDragOver={isDragging && !isMobile ? e => { e.preventDefault(); setNextHov(true); setPrevHov(false); setDropTarget(null); } : undefined}
+            onDragLeave={isDragging && !isMobile ? () => setNextHov(false) : undefined}
+            onDrop={isDragging && !isMobile ? e => handleCrossWeekDrop(e, 1) : undefined}
             className={cn(
               'w-7 h-7 flex items-center justify-center rounded-lg border transition-all duration-150',
               nextHov
                 ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 scale-110'
-                : isDragging
+                : isDragging && !isMobile
                 ? 'border-dashed border-zinc-400 dark:border-zinc-500 text-zinc-500 dark:text-zinc-400 animate-pulse'
                 : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
@@ -299,7 +323,15 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
             <ChevronRight size={14} />
           </button>
 
-          {weekOffset !== 0 && !isDragging && (
+          {isMobile && mobileDayOffset !== 0 && (
+            <button
+              onClick={() => setMobileDayOffset(0)}
+              className="ml-1 text-xs font-medium text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+            >
+              Today
+            </button>
+          )}
+          {!isMobile && weekOffset !== 0 && !isDragging && (
             <button
               onClick={() => setWeekOffset(0)}
               className="ml-1 text-xs font-medium text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
@@ -307,8 +339,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
               This week
             </button>
           )}
-
-          {isDragging && (
+          {isDragging && !isMobile && (
             <span className="ml-2 text-[10px] font-medium text-zinc-400 dark:text-zinc-500 select-none">
               Drop on ← → to move to prev / next week
             </span>
@@ -341,12 +372,12 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
 
               {/* Sticky header row — same grid as body below */}
               <div
-                className="sticky top-0 z-20 grid grid-cols-7 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
-                style={{ height: HEADER_H }}
+                className="sticky top-0 z-20 grid border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
+                style={{ height: HEADER_H, gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }}
               >
                 {days.map((day, i) => {
                   const isToday    = isSameDay(day, todayDate);
-                  const isWeekend  = IS_WEEKEND[i];
+                  const isWeekend  = IS_WEEKEND[day.getDay()];
                   const outOfRange = tasksByDay[i].filter(t => !isInRange(t.dueDate)).length;
                   return (
                     <div key={i} className={cn(
@@ -358,7 +389,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                         'text-[9px] font-semibold uppercase tracking-wider mb-0.5',
                         isWeekend ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 dark:text-zinc-500',
                       )}>
-                        {DAY_NAMES[i]}
+                        {DAY_NAMES[day.getDay()]}
                       </p>
                       <div className={cn('w-6 h-6 rounded-full flex items-center justify-center', isToday && 'bg-zinc-900 dark:bg-white')}>
                         <span className={cn(
@@ -376,8 +407,8 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                 })}
               </div>
 
-              {/* Body grid — same grid-cols-7, pixel-perfect alignment with header */}
-              <div className="grid grid-cols-7 relative" style={{ height: TOTAL_HEIGHT }}>
+              {/* Body grid — pixel-perfect alignment with header */}
+              <div className="grid relative" style={{ height: TOTAL_HEIGHT, gridTemplateColumns: `repeat(${numCols}, minmax(0, 1fr))` }}>
 
                 {/* Hour grid lines */}
                 {HOURS.map((h, i) => (
@@ -390,7 +421,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                 {/* Per-day columns */}
                 {days.map((day, dayIdx) => {
                   const isToday   = isSameDay(day, todayDate);
-                  const isWeekend = IS_WEEKEND[dayIdx];
+                  const isWeekend = IS_WEEKEND[day.getDay()];
                   const isDropDay = dropTarget?.dayIdx === dayIdx;
                   const layout    = layoutsByDay[dayIdx];
 

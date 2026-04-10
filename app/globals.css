@@ -28,6 +28,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-image: radial-gradient(circle, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
   background-size: 12px 12px;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in inputs/textareas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 html.dark body {
