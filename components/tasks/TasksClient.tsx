@@ -11,6 +11,7 @@ import { TaskTable } from '@/components/tasks/TaskTable';
 import { ProjectSideNav } from '@/components/tasks/ProjectSideNav';
 import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher';
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
+import { TodayView } from '@/components/tasks/TodayView';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 
 function api(url: string, method: string, body?: unknown) {
@@ -426,6 +427,20 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 api(`/api/tasks/${id}`, 'PUT', updates);
               }}
               unscheduledTasks={workstreamTasks.filter(t => (t.isUnscheduled ?? false) && t.status !== 'done')}
+            />
+          )}
+
+          {taskView === 'today' && (
+            <TodayView
+              tasks={workstreamTasks.filter(
+                t => selectedProjectId === null || t.projectId === selectedProjectId
+              )}
+              projects={projects}
+              onEditTask={openDrawer}
+              onUpdateTask={(id, updates) => {
+                setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
+                api(`/api/tasks/${id}`, 'PUT', updates);
+              }}
             />
           )}
 

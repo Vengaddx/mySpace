@@ -2,11 +2,12 @@
 
 import { cn } from '@/lib/utils';
 
-export type FocusView = 'list' | 'week';
+export type FocusView = 'list' | 'week' | 'today';
 
 const VIEWS: { value: FocusView; label: string }[] = [
   { value: 'list', label: 'List' },
   { value: 'week', label: 'Week' },
+  { value: 'today', label: 'Today' },
 ];
 
 interface TaskViewSwitcherProps {
