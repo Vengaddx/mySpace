@@ -88,10 +88,12 @@ interface GoalsClientProps { initialGoals: Goal[] }
 export function GoalsClient({ initialGoals }: GoalsClientProps) {
   const today = useMemo(() => new Date(), []);
 
-  const [goals,   setGoals]   = useState<Goal[]>(initialGoals);
-  const [year,    setYear]    = useState(today.getFullYear());
-  const [month,   setMonth]   = useState(today.getMonth());
-  const [adding,  setAdding]  = useState(false);
+  const [goals,       setGoals]       = useState<Goal[]>(initialGoals);
+  const [year,        setYear]        = useState(today.getFullYear());
+  const [month,       setMonth]       = useState(today.getMonth());
+  const [adding,      setAdding]      = useState(false);
+  const [editingId,   setEditingId]   = useState<string | null>(null);
+  const [editTitle,   setEditTitle]   = useState('');
 
   const [nTitle,  setNTitle]  = useState('');
   const [nColor,  setNColor]  = useState(PALETTE[0]);
@@ -121,11 +123,23 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     setGoals(p => p.filter(g => g.id !== id));
     api(`/api/goals/${id}`, 'DELETE');
   }
+  function startEdit(goal: Goal) {
+    setEditingId(goal.id);
+    setEditTitle(goal.title);
+  }
+  function commitEdit(id: string) {
+    const title = editTitle.trim();
+    if (title) {
+      setGoals(p => p.map(g => g.id === id ? { ...g, title } : g));
+      api(`/api/goals/${id}`, 'PUT', { title });
+    }
+    setEditingId(null);
+  }
 
   function addGoal() {
     if (!nTitle.trim()) return;
     const newGoal = {
-      id: `goal-${Date.now()}`, month: monthStr,
+      id: crypto.randomUUID(), month: monthStr,
       title: nTitle.trim(), emoji: '', color: nColor, type: nType, checkins: [],
       target:  nType === 'milestone' ? (Number(nTarget) || undefined) : undefined,
       unit:    nType === 'milestone' ? (nUnit.trim() || undefined) : undefined,
@@ -175,6 +189,11 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         onToggle={toggle}
         onSetCurrent={setCurrent}
         onRemove={remove}
+        editingId={editingId}
+        editTitle={editTitle}
+        onEditTitle={setEditTitle}
+        onStartEdit={startEdit}
+        onCommitEdit={commitEdit}
       />
 
       {/* ── Empty state ───────────────────────────────────────────────────────── */}
@@ -201,12 +220,17 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
 }
 
 // ── Month rings calendar view ─────────────────────────────────────────────────
-function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSetCurrent, onRemove }: {
+function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSetCurrent, onRemove, editingId, editTitle, onEditTitle, onStartEdit, onCommitEdit }: {
   habits: Goal[]; milestones: Goal[];
   year: number; month: number; today: Date;
   onToggle: (id: string, ds: string) => void;
   onSetCurrent: (id: string, val: number) => void;
   onRemove: (id: string) => void;
+  editingId: string | null;
+  editTitle: string;
+  onEditTitle: (v: string) => void;
+  onStartEdit: (goal: Goal) => void;
+  onCommitEdit: (id: string) => void;
 }) {
   const [selectedDay, setSelectedDay] = useState<Date>(today);
   const cells    = useMemo(() => getMonthCells(year, month), [year, month]);
@@ -321,15 +345,37 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
           {habits.length > 0 && (
             <div className="border-t border-zinc-50 dark:border-zinc-800/60 divide-y divide-zinc-50 dark:divide-zinc-800/40">
               {habits.map(goal => {
-                const checked = goal.checkins.includes(selDS);
-                const future  = selectedDay > today;
+                const checked  = goal.checkins.includes(selDS);
+                const future   = selectedDay > today;
+                const isEditing = editingId === goal.id;
                 return (
                   <div key={goal.id} className="group flex items-center gap-3 px-4 py-3">
                     <div className="w-[3px] h-4 rounded-full shrink-0" style={{ backgroundColor: goal.color }} />
-                    <p className={cn('text-[12px] font-semibold flex-1 truncate',
-                      checked ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600')}>
-                      {goal.title}
-                    </p>
+                    {isEditing ? (
+                      <input
+                        autoFocus
+                        value={editTitle}
+                        onChange={e => onEditTitle(e.target.value)}
+                        onBlur={() => onCommitEdit(goal.id)}
+                        onKeyDown={e => { if (e.key === 'Enter') onCommitEdit(goal.id); if (e.key === 'Escape') onCommitEdit(goal.id); }}
+                        className="flex-1 text-[12px] font-semibold bg-transparent outline-none border-b border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-zinc-100"
+                      />
+                    ) : (
+                      <p className={cn('text-[12px] font-semibold flex-1 truncate',
+                        checked ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600')}>
+                        {goal.title}
+                      </p>
+                    )}
+                    {!isEditing && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => onStartEdit(goal)} className="text-zinc-300 dark:text-zinc-700 hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button onClick={() => onRemove(goal.id)} className="text-zinc-300 dark:text-zinc-700 hover:text-red-400 dark:hover:text-red-500 transition-colors">
+                          <X size={10}/>
+                        </button>
+                      </div>
+                    )}
                     <button
                       disabled={future}
                       onClick={() => !future && onToggle(goal.id, selDS)}
@@ -366,17 +412,36 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
             </div>
             <div className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
               {milestones.map(goal => {
-                const current = goal.current ?? 0;
-                const target  = goal.target  ?? 100;
-                const pct     = Math.min(100, Math.round((current / target) * 100));
+                const current   = goal.current ?? 0;
+                const target    = goal.target  ?? 100;
+                const pct       = Math.min(100, Math.round((current / target) * 100));
+                const isEditing = editingId === goal.id;
                 return (
                   <div key={goal.id} className="group px-4 py-3">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-[3px] h-3.5 rounded-full" style={{ backgroundColor: goal.color }} />
-                        <p className="text-[12px] font-semibold text-zinc-800 dark:text-zinc-200 truncate">{goal.title}</p>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="w-[3px] h-3.5 rounded-full shrink-0" style={{ backgroundColor: goal.color }} />
+                        {isEditing ? (
+                          <input
+                            autoFocus
+                            value={editTitle}
+                            onChange={e => onEditTitle(e.target.value)}
+                            onBlur={() => onCommitEdit(goal.id)}
+                            onKeyDown={e => { if (e.key === 'Enter') onCommitEdit(goal.id); if (e.key === 'Escape') onCommitEdit(goal.id); }}
+                            className="flex-1 text-[12px] font-semibold bg-transparent outline-none border-b border-zinc-300 dark:border-zinc-600 text-zinc-800 dark:text-zinc-200"
+                          />
+                        ) : (
+                          <p className="text-[12px] font-semibold text-zinc-800 dark:text-zinc-200 truncate">{goal.title}</p>
+                        )}
                       </div>
-                      <button onClick={() => onRemove(goal.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-300 dark:text-zinc-700 hover:text-zinc-500"><X size={11}/></button>
+                      {!isEditing && (
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button onClick={() => onStartEdit(goal)} className="text-zinc-300 dark:text-zinc-700 hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button onClick={() => onRemove(goal.id)} className="text-zinc-300 dark:text-zinc-700 hover:text-red-400 dark:hover:text-red-500 transition-colors"><X size={11}/></button>
+                        </div>
+                      )}
                     </div>
                     <div className="h-[2px] bg-zinc-100 dark:bg-zinc-800 rounded-full mb-2">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: goal.color }} />

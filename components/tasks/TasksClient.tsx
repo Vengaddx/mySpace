@@ -48,7 +48,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const [taskView, setTaskView] = useState<FocusView>('list');
+  const [taskView, setTaskView] = useState<FocusView>('week');
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -175,7 +175,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   };
   const handleAdd = (partial: Partial<Task>) => {
     const newTask: Task = {
-      id: `t${Date.now()}`,
+      id: crypto.randomUUID(),
       title: partial.title || '',
       category: partial.category || 'work',
       workstream: partial.workstream || (workstreamKey ?? 'aramco'),
@@ -421,9 +421,10 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
               )}
               projects={projects}
               onEditTask={openDrawer}
-              onUpdateTask={(id, updates) =>
-                setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t))
-              }
+              onUpdateTask={(id, updates) => {
+                setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
+                api(`/api/tasks/${id}`, 'PUT', updates);
+              }}
               unscheduledTasks={workstreamTasks.filter(t => (t.isUnscheduled ?? false) && t.status !== 'done')}
             />
           )}

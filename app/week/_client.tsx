@@ -7,12 +7,16 @@ import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TaskDrawer } from '@/components/tasks/TaskDrawer';
 import { CalendarDays } from 'lucide-react';
 
-function api(url: string, method: string, body?: unknown) {
-  fetch(url, {
+async function api(url: string, method: string, body?: unknown): Promise<void> {
+  const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
-  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.statusText);
+    throw new Error(`[db] ${method} ${url} → ${res.status}: ${err}`);
+  }
 }
 
 interface WeekPageClientProps {
@@ -30,15 +34,27 @@ export default function WeekPageClient({ initialTasks, initialProjects }: WeekPa
     setDrawerOpen(true);
   };
 
-  const handleSave = (updated: Task) => {
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  const handleSave = async (updated: Task) => {
+    const prev = tasks;
+    setTasks((ts) => ts.map((t) => (t.id === updated.id ? updated : t)));
     setSelectedTask(updated);
-    api(`/api/tasks/${updated.id}`, 'PUT', updated);
+    try {
+      await api(`/api/tasks/${updated.id}`, 'PUT', updated);
+    } catch (e) {
+      console.error(e);
+      setTasks(prev);
+    }
   };
 
-  const handleUpdateTask = (id: string, updates: Partial<Task>) => {
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
-    api(`/api/tasks/${id}`, 'PUT', updates);
+  const handleUpdateTask = async (id: string, updates: Partial<Task>) => {
+    const prev = tasks;
+    setTasks((ts) => ts.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
+    try {
+      await api(`/api/tasks/${id}`, 'PUT', updates);
+    } catch (e) {
+      console.error(e);
+      setTasks(prev);
+    }
   };
 
   return (
@@ -54,7 +70,8 @@ export default function WeekPageClient({ initialTasks, initialProjects }: WeekPa
       </div>
 
       <WeekCalendarView
-        tasks={tasks}
+        tasks={tasks.filter(t => !t.isUnscheduled)}
+        unscheduledTasks={tasks.filter(t => t.isUnscheduled && t.status !== 'done')}
         projects={initialProjects}
         onEditTask={handleEditTask}
         onUpdateTask={handleUpdateTask}

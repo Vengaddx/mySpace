@@ -1,5 +1,32 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment setup
+
+This app reads Supabase credentials from environment variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Recommended split:
+
+1. Local development: create `.env.development.local` and use your development Supabase project.
+2. Vercel preview: set preview-specific values in Vercel if you want a separate preview database.
+3. Vercel production: set production values in Vercel Project Settings for the Production environment.
+
+Useful files in this repo:
+
+- `.env.example`: shared variable names
+- `.env.development.example`: local development template
+- `.env.production.example`: production template
+
+Notes:
+
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only and must never be exposed in client components.
+- `NEXT_PUBLIC_SUPABASE_URL` is safe to expose to the browser, but should still point to the correct Supabase project for each environment.
+- Next.js loads `.env*` files automatically. Prefer `.env.development.local` for local work instead of committing real secrets.
+
 ## Getting Started
 
 First, run the development server:

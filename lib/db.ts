@@ -4,6 +4,8 @@
  * Import only in server components, route handlers, and server actions.
  */
 
+import 'server-only';
+
 import { supabase } from '@/lib/supabase';
 import type { Task, Project, WeeklyIntent, MonthlyFocus, MonthlyGoal, Goal } from '@/types';
 import type { Trip } from '@/lib/travel-data';
