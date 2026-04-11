@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task, Priority, Status, Workstream, Project, RecurrenceType } from '@/types';
 import { cn, formatDate } from '@/lib/utils';
-import { X, Calendar, Clock, Star, Zap, StickyNote, FolderOpen, Bell, RefreshCw, ChevronDown } from 'lucide-react';
+import { X, Calendar, Clock, Star, Zap, StickyNote, FolderOpen, Bell, RefreshCw, ChevronDown, Trash2 } from 'lucide-react';
 import { PriorityBadge, StatusBadge, WorkstreamBadge } from '@/components/ui/Badge';
 
 // ── Date/time helpers ──────────────────────────────────────────────────────
@@ -142,10 +142,11 @@ interface TaskDrawerProps {
   open: boolean;
   onClose: () => void;
   onSave?: (task: Task) => void;
+  onDelete?: (id: string) => void;
   projects?: Project[];
 }
 
-export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskDrawerProps) {
+export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [] }: TaskDrawerProps) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Task | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -247,6 +248,15 @@ export function TaskDrawer({ task, open, onClose, onSave, projects = [] }: TaskD
                       Save
                     </button>
                   </>
+                )}
+                {onDelete && task && (
+                  <button
+                    onClick={() => { onDelete(task.id); onClose(); }}
+                    className="flex items-center justify-center w-8 h-8 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    title="Delete task"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
                 <button
                   onClick={onClose}

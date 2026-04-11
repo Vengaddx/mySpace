@@ -464,6 +464,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onSave={handleSave}
+        onDelete={handleDelete}
         projects={projects}
       />
       <QuickAddTask
