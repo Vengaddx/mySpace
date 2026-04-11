@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { Task, Project } from '@/types';
 import { cn, isOverdue } from '@/lib/utils';
 import { LayoutList } from 'lucide-react';
+
+const SNAP_MIN = 15;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const START_HOUR  = 6;
@@ -97,10 +99,46 @@ interface TodayViewProps {
 }
 
 export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayViewProps) {
-  const scrollRef  = useRef<HTMLDivElement>(null);
-  const nowLineRef = useRef<HTMLDivElement>(null);
+  const scrollRef    = useRef<HTMLDivElement>(null);
+  const nowLineRef   = useRef<HTMLDivElement>(null);
+  const draggingId   = useRef<string | null>(null);
+  const dropPxRef    = useRef<number | null>(null);
   const [nowPx, setNowPx] = useState(getNowPx);
+  const [dropPx, setDropPx] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [poolProjectId, setPoolProjectId] = useState<string | null>(null);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const rawMin = ((e.clientY - rect.top) / HOUR_HEIGHT) * 60 + START_HOUR * 60;
+    const snapped = Math.round(rawMin / SNAP_MIN) * SNAP_MIN;
+    const clamped = Math.max(START_HOUR * 60, Math.min((END_HOUR - 1) * 60, snapped));
+    const px = (clamped / 60 - START_HOUR) * HOUR_HEIGHT;
+    if (dropPxRef.current !== px) {
+      dropPxRef.current = px;
+      setDropPx(px);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggingId.current || dropPxRef.current === null) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const rawMin = ((e.clientY - rect.top) / HOUR_HEIGHT) * 60 + START_HOUR * 60;
+    const snapped = Math.round(rawMin / SNAP_MIN) * SNAP_MIN;
+    const clamped = Math.max(START_HOUR * 60, Math.min((END_HOUR - 1) * 60, snapped));
+    const hour = Math.floor(clamped / 60);
+    const minute = clamped % 60;
+    const newDate = new Date();
+    newDate.setHours(hour, minute, 0, 0);
+    onUpdateTask(draggingId.current, { dueDate: newDate.toISOString(), isUnscheduled: false });
+    draggingId.current = null;
+    dropPxRef.current = null;
+    setDropPx(null);
+    setIsDragging(false);
+  }, [onUpdateTask]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -191,7 +229,13 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
           className="flex-1 min-w-0 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-y-auto"
           style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
         >
-          <div className="relative" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>
+          <div
+            className="relative"
+            style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
+            onDragOver={handleDragOver}
+            onDragLeave={() => { dropPxRef.current = null; setDropPx(null); }}
+            onDrop={handleDrop}
+          >
 
             {/* Hour rows */}
             {HOURS.map(h => (
@@ -232,6 +276,17 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
               </div>
             )}
 
+            {/* Drop indicator */}
+            {isDragging && dropPx !== null && (
+              <div
+                className="absolute left-12 right-0 flex items-center z-30 pointer-events-none"
+                style={{ top: dropPx }}
+              >
+                <div className="flex-1 h-0.5 bg-accent-cyan rounded-full" />
+                <div className="w-2 h-2 rounded-full bg-accent-cyan -mr-1 shrink-0" />
+              </div>
+            )}
+
             {/* Task blocks */}
             {scheduledTasks.map(task => {
               const top    = taskTopPx(task.dueDate);
@@ -248,8 +303,11 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
               return (
                 <button
                   key={task.id}
+                  draggable
+                  onDragStart={() => { draggingId.current = task.id; setIsDragging(true); }}
+                  onDragEnd={() => { draggingId.current = null; dropPxRef.current = null; setDropPx(null); setIsDragging(false); }}
                   onClick={() => onEditTask(task)}
-                  className="absolute rounded-xl px-2.5 py-1.5 text-left overflow-hidden hover:brightness-95 transition-all z-10"
+                  className="absolute rounded-xl px-2.5 py-1.5 text-left overflow-hidden hover:brightness-95 transition-all z-10 cursor-grab active:cursor-grabbing"
                   style={{ top: top + 1, left, width: colW, height, backgroundColor: accent }}
                 >
                   <p className={cn('text-[12px] font-semibold leading-tight truncate', dark ? 'text-zinc-900' : 'text-white', task.status === 'done' && 'line-through opacity-50')}>

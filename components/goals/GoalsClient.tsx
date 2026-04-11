@@ -11,7 +11,7 @@ function api(url: string, method: string, body?: unknown) {
 }
 import { Goal } from '@/types';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Plus, X, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Check, GripVertical } from 'lucide-react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PALETTE = ['#F2296B', '#00C1FF', '#AEDD00', '#FF9900', '#a78bfa', '#34d399'];
@@ -151,6 +151,18 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     setAdding(false); setNTitle(''); setNColor(PALETTE[0]); setNType('habit'); setNTarget(''); setNUnit('');
   }
 
+  function reorderGoal(draggedId: string, targetId: string) {
+    setGoals(prev => {
+      const arr = [...prev];
+      const from = arr.findIndex(g => g.id === draggedId);
+      const to   = arr.findIndex(g => g.id === targetId);
+      if (from === -1 || to === -1 || from === to) return prev;
+      const [item] = arr.splice(from, 1);
+      arr.splice(to, 0, item);
+      return arr;
+    });
+  }
+
   function goMonthBack()    { if (month === 0) { setMonth(11); setYear(y => y-1); } else setMonth(m => m-1); }
   function goMonthForward() { if (month === 11) { setMonth(0); setYear(y => y+1); } else setMonth(m => m+1); }
 
@@ -189,6 +201,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         onToggle={toggle}
         onSetCurrent={setCurrent}
         onRemove={remove}
+        onReorder={reorderGoal}
         editingId={editingId}
         editTitle={editTitle}
         onEditTitle={setEditTitle}
@@ -220,12 +233,13 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
 }
 
 // ── Month rings calendar view ─────────────────────────────────────────────────
-function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSetCurrent, onRemove, editingId, editTitle, onEditTitle, onStartEdit, onCommitEdit }: {
+function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSetCurrent, onRemove, onReorder, editingId, editTitle, onEditTitle, onStartEdit, onCommitEdit }: {
   habits: Goal[]; milestones: Goal[];
   year: number; month: number; today: Date;
   onToggle: (id: string, ds: string) => void;
   onSetCurrent: (id: string, val: number) => void;
   onRemove: (id: string) => void;
+  onReorder: (draggedId: string, targetId: string) => void;
   editingId: string | null;
   editTitle: string;
   onEditTitle: (v: string) => void;
@@ -233,6 +247,7 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
   onCommitEdit: (id: string) => void;
 }) {
   const [selectedDay, setSelectedDay] = useState<Date>(today);
+  const dragGoalId = React.useRef<string | null>(null);
   const cells    = useMemo(() => getMonthCells(year, month), [year, month]);
   const todayDS  = toDS(today);
   const selDS    = toDS(selectedDay);
@@ -349,7 +364,16 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
                 const future   = selectedDay > today;
                 const isEditing = editingId === goal.id;
                 return (
-                  <div key={goal.id} className="group flex items-center gap-3 px-4 py-3">
+                  <div
+                    key={goal.id}
+                    draggable
+                    onDragStart={() => { dragGoalId.current = goal.id; }}
+                    onDragOver={e => { e.preventDefault(); }}
+                    onDrop={() => { if (dragGoalId.current && dragGoalId.current !== goal.id) { onReorder(dragGoalId.current, goal.id); dragGoalId.current = null; } }}
+                    onDragEnd={() => { dragGoalId.current = null; }}
+                    className="group flex items-center gap-3 px-4 py-3 cursor-grab active:cursor-grabbing"
+                  >
+                    <GripVertical size={11} className="shrink-0 text-zinc-200 dark:text-zinc-700 group-hover:text-zinc-400 dark:group-hover:text-zinc-500 transition-colors" />
                     <div className="w-[3px] h-4 rounded-full shrink-0" style={{ backgroundColor: goal.color }} />
                     {isEditing ? (
                       <input
@@ -417,9 +441,18 @@ function MonthRingsView({ habits, milestones, year, month, today, onToggle, onSe
                 const pct       = Math.min(100, Math.round((current / target) * 100));
                 const isEditing = editingId === goal.id;
                 return (
-                  <div key={goal.id} className="group px-4 py-3">
+                  <div
+                    key={goal.id}
+                    draggable
+                    onDragStart={() => { dragGoalId.current = goal.id; }}
+                    onDragOver={e => { e.preventDefault(); }}
+                    onDrop={() => { if (dragGoalId.current && dragGoalId.current !== goal.id) { onReorder(dragGoalId.current, goal.id); dragGoalId.current = null; } }}
+                    onDragEnd={() => { dragGoalId.current = null; }}
+                    className="group px-4 py-3 cursor-grab active:cursor-grabbing"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <GripVertical size={11} className="shrink-0 text-zinc-200 dark:text-zinc-700 group-hover:text-zinc-400 dark:group-hover:text-zinc-500 transition-colors" />
                         <div className="w-[3px] h-3.5 rounded-full shrink-0" style={{ backgroundColor: goal.color }} />
                         {isEditing ? (
                           <input
