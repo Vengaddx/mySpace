@@ -3,6 +3,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { Task, Project } from '@/types';
 import { cn, isOverdue } from '@/lib/utils';
+import { LayoutList } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const START_HOUR  = 6;
@@ -22,6 +23,13 @@ const PRIORITY_COLOR: Record<string, string> = {
   high:     '#AEDD00',
   medium:   '#00C1FF',
   low:      '#71717a',
+};
+
+const PRIORITY_BAR: Record<string, string> = {
+  critical: 'bg-accent-orange',
+  high:     'bg-accent-green',
+  medium:   'bg-accent-blue',
+  low:      'bg-zinc-300 dark:bg-zinc-600',
 };
 
 function needsDarkText(hex: string): boolean {
@@ -92,9 +100,9 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   const scrollRef  = useRef<HTMLDivElement>(null);
   const nowLineRef = useRef<HTMLDivElement>(null);
   const [nowPx, setNowPx] = useState(getNowPx);
+  const [poolProjectId, setPoolProjectId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Scroll so current time is ~30% from top
     const el = scrollRef.current;
     if (!el) return;
     const offset = Math.max(0, getNowPx() - el.clientHeight * 0.3);
@@ -121,9 +129,19 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
     ),
     [tasks]);
 
-  const scheduledTasks = useMemo(() => todayOpen.filter(t => !t.isUnscheduled && hasTime(t.dueDate)), [todayOpen]);
+  const scheduledTasks   = useMemo(() => todayOpen.filter(t => !t.isUnscheduled && hasTime(t.dueDate)), [todayOpen]);
   const unscheduledTasks = useMemo(() => todayOpen.filter(t => t.isUnscheduled || !hasTime(t.dueDate)), [todayOpen]);
-  const layout = useMemo(() => computeColumns(scheduledTasks), [scheduledTasks]);
+  const layout           = useMemo(() => computeColumns(scheduledTasks), [scheduledTasks]);
+
+  const poolProjects = useMemo(() => {
+    const ids = new Set(unscheduledTasks.map(t => t.projectId).filter(Boolean) as string[]);
+    return projects.filter(p => ids.has(p.id));
+  }, [unscheduledTasks, projects]);
+
+  const filteredPool = useMemo(() => {
+    if (!poolProjectId) return unscheduledTasks;
+    return unscheduledTasks.filter(t => t.projectId === poolProjectId);
+  }, [unscheduledTasks, poolProjectId]);
 
   const totalOpen = scheduledTasks.length + unscheduledTasks.length;
 
@@ -164,117 +182,220 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
         </div>
       )}
 
-      {/* ── Unscheduled strip ───────────────────────────────────────────────── */}
-      {unscheduledTasks.length > 0 && (
-        <div className="mb-4 flex gap-2 flex-wrap">
-          {unscheduledTasks.map(task => {
-            const accent = WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa';
-            return (
-              <button
-                key={task.id}
-                onClick={() => onEditTask(task)}
-                className="flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+      {/* ── Main area: time grid + task pool ────────────────────────────────── */}
+      <div className="flex gap-3 items-start">
+
+        {/* ── Time grid ─────────────────────────────────────────────────────── */}
+        <div
+          ref={scrollRef}
+          className="flex-1 min-w-0 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-y-auto"
+          style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
+        >
+          <div className="relative" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>
+
+            {/* Hour rows */}
+            {HOURS.map(h => (
+              <div
+                key={h}
+                className="absolute left-0 right-0 flex items-start pointer-events-none"
+                style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
               >
-                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: accent }} />
-                <span className={cn('text-[12px] font-medium text-zinc-700 dark:text-zinc-300 max-w-[160px] truncate', task.status === 'done' && 'line-through opacity-50')}>{task.title}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Time grid ───────────────────────────────────────────────────────── */}
-      <div
-        ref={scrollRef}
-        className="rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 320px)', minHeight: 320 }}
-      >
-        <div className="relative" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>
-
-          {/* Hour rows */}
-          {HOURS.map(h => (
-            <div
-              key={h}
-              className="absolute left-0 right-0 flex items-start pointer-events-none"
-              style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
-            >
-              <span className="w-12 shrink-0 text-[10px] text-zinc-400 dark:text-zinc-600 text-right pr-3 pt-1 select-none tabular-nums">
-                {String(h).padStart(2, '0')}:00
-              </span>
-              <div className="flex-1 border-t border-zinc-100 dark:border-zinc-800/50" />
-            </div>
-          ))}
-
-          {/* Half-hour dashes */}
-          {HOURS.map(h => (
-            <div
-              key={`${h}-half`}
-              className="absolute left-12 right-0 pointer-events-none"
-              style={{ top: (h - START_HOUR) * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
-            >
-              <div className="border-t border-dashed border-zinc-100/60 dark:border-zinc-800/30" />
-            </div>
-          ))}
-
-          {/* Now indicator */}
-          {nowPx >= 0 && nowPx <= (END_HOUR - START_HOUR) * HOUR_HEIGHT && (
-            <div
-              ref={nowLineRef}
-              className="absolute left-0 right-0 flex items-center z-20 pointer-events-none"
-              style={{ top: nowPx }}
-            >
-              <div className="w-12 shrink-0 flex justify-end pr-2">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="w-12 shrink-0 text-[10px] text-zinc-400 dark:text-zinc-600 text-right pr-3 pt-1 select-none tabular-nums">
+                  {String(h).padStart(2, '0')}:00
+                </span>
+                <div className="flex-1 border-t border-zinc-100 dark:border-zinc-800/50" />
               </div>
-              <div className="flex-1 h-px bg-red-500" />
+            ))}
+
+            {/* Half-hour dashes */}
+            {HOURS.map(h => (
+              <div
+                key={`${h}-half`}
+                className="absolute left-12 right-0 pointer-events-none"
+                style={{ top: (h - START_HOUR) * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
+              >
+                <div className="border-t border-dashed border-zinc-100/60 dark:border-zinc-800/30" />
+              </div>
+            ))}
+
+            {/* Now indicator */}
+            {nowPx >= 0 && nowPx <= (END_HOUR - START_HOUR) * HOUR_HEIGHT && (
+              <div
+                ref={nowLineRef}
+                className="absolute left-0 right-0 flex items-center z-20 pointer-events-none"
+                style={{ top: nowPx }}
+              >
+                <div className="w-12 shrink-0 flex justify-end pr-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                </div>
+                <div className="flex-1 h-px bg-red-500" />
+              </div>
+            )}
+
+            {/* Task blocks */}
+            {scheduledTasks.map(task => {
+              const top    = taskTopPx(task.dueDate);
+              const dur    = task.durationMinutes ?? 60;
+              const height = Math.max((dur / 60) * HOUR_HEIGHT - 3, 24);
+              const info   = layout.get(task.id) ?? { col: 0, total: 1 };
+              const gutter = 3;
+              const colW   = `calc((100% - 3rem - ${gutter * (info.total + 1)}px) / ${info.total})`;
+              const left   = `calc(3rem + ${gutter + (info.col) * (gutter + 1) * 0}px + (100% - 3rem - ${gutter * (info.total + 1)}px) / ${info.total} * ${info.col} + ${gutter * (info.col + 1)}px)`;
+              const accent = WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa';
+              const dark   = needsDarkText(accent);
+              const project = task.projectId ? projectMap.get(task.projectId) : undefined;
+
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => onEditTask(task)}
+                  className="absolute rounded-xl px-2.5 py-1.5 text-left overflow-hidden hover:brightness-95 transition-all z-10"
+                  style={{ top: top + 1, left, width: colW, height, backgroundColor: accent }}
+                >
+                  <p className={cn('text-[12px] font-semibold leading-tight truncate', dark ? 'text-zinc-900' : 'text-white', task.status === 'done' && 'line-through opacity-50')}>
+                    {task.title}
+                  </p>
+                  {height >= 40 && (
+                    <p className={cn('text-[10px] leading-tight mt-0.5', dark ? 'text-zinc-700' : 'text-white/70')}>
+                      {fmtTime(task.dueDate)}{dur !== 60 ? ` · ${dur}m` : ''}
+                      {project ? ` · ${project.name}` : ''}
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Empty state */}
+            {scheduledTasks.length === 0 && (
+              <div
+                className="absolute left-12 right-0 flex items-center justify-center pointer-events-none"
+                style={{ top: getNowPx() - 20, height: 40 }}
+              >
+                <p className="text-xs text-zinc-400 dark:text-zinc-600">No events scheduled</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Task Pool panel ───────────────────────────────────────────────── */}
+        <div className="hidden sm:flex w-[188px] shrink-0 flex-col rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-hidden"
+          style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
+        >
+          {/* Panel header */}
+          <div className="px-4 pt-4 pb-3 shrink-0 border-b border-zinc-50 dark:border-zinc-800/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center">
+                  <LayoutList size={12} className="text-zinc-500 dark:text-zinc-400" />
+                </div>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-600 dark:text-zinc-400">
+                  Task Pool
+                </span>
+              </div>
+              {unscheduledTasks.length > 0 && (
+                <span className="text-[10px] font-bold bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-1.5 py-0.5 rounded-full min-w-[18px] text-center tabular-nums">
+                  {unscheduledTasks.length}
+                </span>
+              )}
+            </div>
+            <p className="text-[9px] text-zinc-400 dark:text-zinc-600 mt-1.5 leading-relaxed">
+              Tasks without a scheduled time
+            </p>
+          </div>
+
+          {/* Project filter chips */}
+          {poolProjects.length > 0 && (
+            <div className="px-3 py-2.5 shrink-0 border-b border-zinc-50 dark:border-zinc-800/40">
+              <div className="flex flex-wrap gap-1">
+                <button
+                  onClick={() => setPoolProjectId(null)}
+                  className={cn(
+                    'text-[9px] font-semibold px-2 py-1 rounded-full transition-all',
+                    poolProjectId === null
+                      ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
+                      : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                  )}
+                >
+                  All
+                </button>
+                {poolProjects.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPoolProjectId(p.id)}
+                    className={cn(
+                      'text-[9px] font-semibold px-2 py-1 rounded-full transition-all',
+                      poolProjectId === p.id
+                        ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
+                        : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    )}
+                  >
+                    {p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Task blocks */}
-          {scheduledTasks.map(task => {
-            const top    = taskTopPx(task.dueDate);
-            const dur    = task.durationMinutes ?? 60;
-            const height = Math.max((dur / 60) * HOUR_HEIGHT - 3, 24);
-            const info   = layout.get(task.id) ?? { col: 0, total: 1 };
-            const gutter = 3;
-            const colW   = `calc((100% - 3rem - ${gutter * (info.total + 1)}px) / ${info.total})`;
-            const left   = `calc(3rem + ${gutter + (info.col) * (gutter + 1) * 0}px + (100% - 3rem - ${gutter * (info.total + 1)}px) / ${info.total} * ${info.col} + ${gutter * (info.col + 1)}px)`;
-            const accent = WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa';
-            const dark   = needsDarkText(accent);
-            const project = task.projectId ? projectMap.get(task.projectId) : undefined;
-
-            return (
-              <button
-                key={task.id}
-                onClick={() => onEditTask(task)}
-                className="absolute rounded-xl px-2.5 py-1.5 text-left overflow-hidden hover:brightness-95 transition-all z-10"
-                style={{ top: top + 1, left, width: colW, height, backgroundColor: accent }}
-              >
-                <p className={cn('text-[12px] font-semibold leading-tight truncate', dark ? 'text-zinc-900' : 'text-white', task.status === 'done' && 'line-through opacity-50')}>
-                  {task.title}
-                </p>
-                {height >= 40 && (
-                  <p className={cn('text-[10px] leading-tight mt-0.5', dark ? 'text-zinc-700' : 'text-white/70')}>
-                    {fmtTime(task.dueDate)}{dur !== 60 ? ` · ${dur}m` : ''}
-                    {project ? ` · ${project.name}` : ''}
+          {/* Task list */}
+          <div className="flex-1 overflow-y-auto min-h-0 py-2.5 px-2.5 space-y-1.5">
+            {filteredPool.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 pb-8">
+                <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-300 dark:text-zinc-600">
+                    <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="9" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div className="text-center space-y-0.5">
+                  <p className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500">All scheduled</p>
+                  <p className="text-[10px] text-zinc-300 dark:text-zinc-600 leading-relaxed">
+                    No unscheduled<br />tasks for today
                   </p>
-                )}
-              </button>
-            );
-          })}
+                </div>
+              </div>
+            ) : (
+              filteredPool.map(task => {
+                const proj = projectMap.get(task.projectId ?? '');
+                return (
+                  <button
+                    key={task.id}
+                    onClick={() => onEditTask(task)}
+                    className="w-full group relative flex items-stretch gap-0 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700 text-left transition-all duration-150 hover:shadow-sm overflow-hidden"
+                  >
+                    {/* Priority accent bar */}
+                    <div className={cn('w-[3px] shrink-0', PRIORITY_BAR[task.priority] ?? PRIORITY_BAR.medium)} />
 
-          {/* Empty state */}
-          {scheduledTasks.length === 0 && (
-            <div
-              className="absolute left-12 right-0 flex items-center justify-center pointer-events-none"
-              style={{ top: getNowPx() - 20, height: 40 }}
-            >
-              <p className="text-xs text-zinc-400 dark:text-zinc-600">No events scheduled</p>
+                    <div className="flex-1 min-w-0 px-2.5 py-2">
+                      <p className={cn('text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 leading-snug line-clamp-2', task.status === 'done' && 'line-through opacity-50')}>
+                        {task.title}
+                      </p>
+                      {proj ? (
+                        <p className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 mt-1 truncate">
+                          {proj.name}
+                        </p>
+                      ) : (
+                        <p className="text-[9px] font-medium text-zinc-300 dark:text-zinc-600 mt-1 capitalize">
+                          {task.workstream}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer count */}
+          {filteredPool.length > 0 && (
+            <div className="px-3 py-2 border-t border-zinc-50 dark:border-zinc-800/40 shrink-0">
+              <p className="text-[9px] text-zinc-300 dark:text-zinc-600 text-center leading-relaxed">
+                {filteredPool.length} task{filteredPool.length !== 1 ? 's' : ''} in pool
+              </p>
             </div>
           )}
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }

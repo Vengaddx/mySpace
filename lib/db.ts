@@ -185,6 +185,17 @@ export async function createProject(project: Project): Promise<Project> {
   return rowToProject(data);
 }
 
+export async function updateProject(id: string, name: string): Promise<Project> {
+  const { data, error } = await supabase.from('projects').update({ name }).eq('id', id).select().single();
+  if (error) throw new Error(error.message);
+  return rowToProject(data);
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  const { error } = await supabase.from('projects').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
 // ── Weekly Intent ─────────────────────────────────────────────────────────────
 
 export async function getWeeklyIntent(): Promise<WeeklyIntent | null> {

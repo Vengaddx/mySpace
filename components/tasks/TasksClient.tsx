@@ -128,6 +128,17 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
     api('/api/projects', 'POST', newProject);
   };
 
+  const handleRenameProject = (id: string, name: string) => {
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, name } : p)));
+    api(`/api/projects/${id}`, 'PUT', { name });
+  };
+
+  const handleDeleteProject = (id: string) => {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    if (selectedProjectId === id) setSelectedProjectId(null);
+    api(`/api/projects/${id}`, 'DELETE');
+  };
+
   const handleStatusChange = (id: string, status: Task['status']) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t))
@@ -256,6 +267,8 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                   setSearch('');
                 }}
                 onAddProject={handleAddProject}
+                onRenameProject={handleRenameProject}
+                onDeleteProject={handleDeleteProject}
               />
             </div>
           </div>
