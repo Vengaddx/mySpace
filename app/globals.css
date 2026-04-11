@@ -20,6 +20,10 @@
   --color-accent-cyan:   #00C1FF;
 }
 
+html, body {
+  height: 100dvh;
+}
+
 body {
   background: #ffffff;
   color: var(--foreground);
