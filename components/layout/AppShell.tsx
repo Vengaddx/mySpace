@@ -7,7 +7,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="flex flex-col h-full transition-colors">
+    <div className="flex flex-col h-full transition-colors" style={{ height: '100dvh' }}>
       <TopHeader />
       {/* Only this area scrolls — gives native app feel */}
       <main
