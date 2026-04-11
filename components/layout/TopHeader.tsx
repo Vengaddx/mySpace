@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Tasks',  href: '/tasks' },
   { label: 'Goals',  href: '/goals' },
   { label: 'Travel', href: '/travel' },
+  // { label: 'Roadmap', href: '/roadmap' }, // hidden — work in progress
 ];
 
 export function TopHeader() {
