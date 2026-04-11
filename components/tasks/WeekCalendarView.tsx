@@ -138,7 +138,7 @@ interface WeekCalendarViewProps {
 
 // ══════════════════════════════════════════════════════════════════════════
 export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTask, unscheduledTasks = [] }: WeekCalendarViewProps) {
-  const projectMap  = new Map(projects.map(p => [p.id, p]));
+  const projectMap  = useMemo(() => new Map(projects.map(p => [p.id, p])), [projects]);
   const todayDate   = useMemo(() => new Date(), []);
 
   const [weekOffset,      setWeekOffset]      = useState(0);
@@ -152,10 +152,11 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   const [panelProjectId, setPanelProjectId] = useState<string | null>(null);
   const [inboxHov,       setInboxHov]       = useState(false);
 
-  const draggingId   = useRef<string | null>(null);
-  const scrollRef    = useRef<HTMLDivElement>(null);
-  const swipeStartX  = useRef<number | null>(null);
-  const swipeStartY  = useRef<number | null>(null);
+  const draggingId      = useRef<string | null>(null);
+  const scrollRef       = useRef<HTMLDivElement>(null);
+  const swipeStartX     = useRef<number | null>(null);
+  const swipeStartY     = useRef<number | null>(null);
+  const dropTargetRef   = useRef<DropTarget | null>(null);
 
   // Detect mobile viewport
   useEffect(() => {
@@ -226,8 +227,16 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
     const rawMin = ((e.clientY - rect.top) / HOUR_HEIGHT) * 60 + START_HOUR * 60;
     const snapped = Math.round(rawMin / SNAP_MIN) * SNAP_MIN;
     const clamped = Math.max(START_HOUR * 60, Math.min((END_HOUR - 1) * 60, snapped));
-    setDropTarget({ dayIdx, hour: Math.floor(clamped / 60), minute: clamped % 60 });
-    setPrevHov(false); setNextHov(false);
+    const hour = Math.floor(clamped / 60);
+    const minute = clamped % 60;
+    const cur = dropTargetRef.current;
+    if (!cur || cur.dayIdx !== dayIdx || cur.hour !== hour || cur.minute !== minute) {
+      const next = { dayIdx, hour, minute };
+      dropTargetRef.current = next;
+      setDropTarget(next);
+    }
+    if (prevHov) setPrevHov(false);
+    if (nextHov) setNextHov(false);
   }
 
   function handleDrop(e: React.DragEvent, day: Date) {
@@ -242,7 +251,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
       : new Date(day);
     base.setHours(dropTarget.hour, dropTarget.minute, 0, 0);
     onUpdateTask(draggingId.current, { dueDate: base.toISOString(), isUnscheduled: false });
-    draggingId.current = null; setDropTarget(null); setIsDragging(false);
+    draggingId.current = null; dropTargetRef.current = null; setDropTarget(null); setIsDragging(false);
   }
 
   function handleCrossWeekDrop(e: React.DragEvent, direction: 1 | -1) {
@@ -255,7 +264,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
     d.setDate(d.getDate() + direction * 7);
     onUpdateTask(draggingId.current, { dueDate: d.toISOString(), isUnscheduled: false });
     setWeekOffset(o => o + direction);
-    draggingId.current = null; setIsDragging(false); setPrevHov(false); setNextHov(false);
+    draggingId.current = null; dropTargetRef.current = null; setIsDragging(false); setPrevHov(false); setNextHov(false);
   }
 
   function startDrag(id: string) {
@@ -265,6 +274,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
 
   function endDrag() {
     draggingId.current = null;
+    dropTargetRef.current = null;
     setIsDragging(false); setDropTarget(null); setPrevHov(false); setNextHov(false); setInboxHov(false);
   }
 
