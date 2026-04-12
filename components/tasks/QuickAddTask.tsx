@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Task, Priority, Workstream, Project, RecurrenceType } from '@/types';
-import { X, Plus, Star, Zap, Clock, RefreshCw } from 'lucide-react';
+import { X, Plus, Clock, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QuickAddTaskProps {
@@ -30,8 +30,6 @@ export function QuickAddTask({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [recurrence, setRecurrence] = useState<RecurrenceType>('none');
-  const [isWeekFocus, setIsWeekFocus] = useState(false);
-  const [isMonthFocus, setIsMonthFocus] = useState(false);
 
   // Sync defaults when dialog opens
   useEffect(() => {
@@ -44,8 +42,6 @@ export function QuickAddTask({
       setEndTime('');
       setRecurrence('none');
       setPriority('medium');
-      setIsWeekFocus(false);
-      setIsMonthFocus(false);
     }
   }, [open, defaultWorkstream, defaultProjectId]);
 
@@ -93,8 +89,8 @@ export function QuickAddTask({
       dueDate: base.toISOString(),
       isUnscheduled,
       status: 'todo',
-      isWeekFocus,
-      isMonthFocus,
+      isWeekFocus: false,
+      isMonthFocus: false,
       durationMinutes,
       recurrence: recurrence !== 'none' ? recurrence : undefined,
     });
@@ -255,36 +251,6 @@ export function QuickAddTask({
                   <option value="weekly">Every week</option>
                 </select>
               </div>
-            </div>
-
-            {/* Focus toggles */}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setIsWeekFocus(!isWeekFocus)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all flex-1 justify-center',
-                  isWeekFocus
-                    ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white'
-                    : 'bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
-                )}
-              >
-                <Star size={12} className={isWeekFocus ? 'fill-current' : ''} />
-                Week Highlight
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsMonthFocus(!isMonthFocus)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all flex-1 justify-center',
-                  isMonthFocus
-                    ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white'
-                    : 'bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
-                )}
-              >
-                <Zap size={12} className={isMonthFocus ? 'fill-current' : ''} />
-                Month Focus
-              </button>
             </div>
 
             {/* Actions */}
