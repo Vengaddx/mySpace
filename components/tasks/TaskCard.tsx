@@ -19,7 +19,7 @@ interface TaskCardProps {
 export function TaskCard({
   task, onEdit, onDelete, onStatusChange, onToggleCritical, onClick, compact = false,
 }: TaskCardProps) {
-  const overdue = isOverdue(task.dueDate, task.status);
+  const overdue = isOverdue(task.dueDate, task.status, task.isUnscheduled);
   const dueToday = isToday(task.dueDate);
   const [menuOpen, setMenuOpen] = useState(false);
 

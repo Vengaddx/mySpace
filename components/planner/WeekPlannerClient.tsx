@@ -33,7 +33,7 @@ export function WeekPlannerClient({ initialTasks, initialIntent }: WeekPlannerCl
 
   const weekTasks = tasks.filter((t) => t.isWeekFocus && t.status !== 'done');
   const mustCloseTasks = tasks.filter((t) => t.isWeekFocus && t.priority === 'critical' && t.status !== 'done');
-  const followUpTasks = tasks.filter((t) => t.isWeekFocus && isOverdue(t.dueDate, t.status));
+  const followUpTasks = tasks.filter((t) => t.isWeekFocus && isOverdue(t.dueDate, t.status, t.isUnscheduled));
   const personalWeekTasks = tasks.filter((t) => t.isWeekFocus && t.category === 'personal' && t.status !== 'done');
   const availableTasks = tasks.filter((t) => !t.isWeekFocus && t.status !== 'done');
 

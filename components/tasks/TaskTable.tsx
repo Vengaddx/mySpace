@@ -193,7 +193,7 @@ function TaskRow({
   onEdit: (task: Task) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const overdue = isOverdue(task.dueDate, task.status);
+  const overdue = isOverdue(task.dueDate, task.status, task.isUnscheduled);
   const dueToday = isToday(task.dueDate);
   const isDone = task.status === 'done';
 

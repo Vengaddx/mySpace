@@ -22,9 +22,13 @@ export function isToday(iso: string): boolean {
   return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
 }
 
-export function isOverdue(iso: string, status: Status): boolean {
+export function isOverdue(iso: string, status: Status, isUnscheduled?: boolean): boolean {
   if (status === 'done') return false;
-  return new Date(iso) < new Date(new Date().toDateString());
+  // Tasks with no manually set time (isUnscheduled or midnight placeholder) are not time-bound
+  if (isUnscheduled) return false;
+  const d = new Date(iso);
+  if (d.getHours() === 0 && d.getMinutes() === 0) return false;
+  return d < new Date();
 }
 
 export function isUpcoming(iso: string): boolean {

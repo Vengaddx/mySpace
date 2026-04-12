@@ -102,7 +102,7 @@ export function getWorkstreamAnalytics(tasks: Task[]): WorkstreamAnalytics[] {
   return WORKSTREAM_ORDER.map((workstream) => {
     const workstreamTasks = tasks.filter((task) => task.workstream === workstream);
     const completed = workstreamTasks.filter((task) => task.status === 'done').length;
-    const overdue = workstreamTasks.filter((task) => isOverdue(task.dueDate, task.status)).length;
+    const overdue = workstreamTasks.filter((task) => isOverdue(task.dueDate, task.status, task.isUnscheduled)).length;
     const total = workstreamTasks.length;
     const open = total - completed;
 
@@ -123,7 +123,7 @@ export function getSummaryMetrics(tasks: Task[]): SummaryMetric[] {
   const total = tasks.length;
   const completed = tasks.filter((task) => task.status === 'done').length;
   const inProgress = tasks.filter((task) => task.status === 'in_progress').length;
-  const overdue = tasks.filter((task) => isOverdue(task.dueDate, task.status)).length;
+  const overdue = tasks.filter((task) => isOverdue(task.dueDate, task.status, task.isUnscheduled)).length;
   const criticalOpen = tasks.filter(
     (task) => task.priority === 'critical' && task.status !== 'done'
   ).length;
@@ -172,7 +172,7 @@ export function getProjectLoad(tasks: Task[], projects: Project[]) {
     .map((project) => {
       const projectTasks = tasks.filter((task) => task.projectId === project.id);
       const open = projectTasks.filter((task) => task.status !== 'done').length;
-      const overdue = projectTasks.filter((task) => isOverdue(task.dueDate, task.status)).length;
+      const overdue = projectTasks.filter((task) => isOverdue(task.dueDate, task.status, task.isUnscheduled)).length;
       const completed = projectTasks.filter((task) => task.status === 'done').length;
       const critical = projectTasks.filter(
         (task) => task.priority === 'critical' && task.status !== 'done'
@@ -208,7 +208,7 @@ export function getTrendPoints(tasks: Task[], days = 7, now = new Date()) {
 
     const planned = tasks.filter((task) => isSameDay(new Date(task.dueDate), date)).length;
     const overdue = tasks.filter(
-      (task) => isSameDay(new Date(task.dueDate), date) && isOverdue(task.dueDate, task.status)
+      (task) => isSameDay(new Date(task.dueDate), date) && isOverdue(task.dueDate, task.status, task.isUnscheduled)
     ).length;
 
     return {
@@ -245,7 +245,7 @@ export function getMonthActivity(tasks: Task[], monthDate = new Date()) {
       return completionDate ? isSameDay(new Date(completionDate), date) : false;
     }).length;
     const overdue = tasks.filter(
-      (task) => isSameDay(new Date(task.dueDate), date) && isOverdue(task.dueDate, task.status)
+      (task) => isSameDay(new Date(task.dueDate), date) && isOverdue(task.dueDate, task.status, task.isUnscheduled)
     ).length;
 
     days.push({

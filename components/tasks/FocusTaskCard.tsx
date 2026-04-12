@@ -60,7 +60,7 @@ export function FocusTaskCard({
 }: FocusTaskCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const overdue = isOverdue(task.dueDate, task.status);
+  const overdue = isOverdue(task.dueDate, task.status, task.isUnscheduled);
   const dueToday = isToday(task.dueDate);
   const isDone = task.status === 'done';
   const project = projects.find((p) => p.id === task.projectId);
