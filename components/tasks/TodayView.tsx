@@ -354,7 +354,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
         </div>
 
         {/* ── Task Pool panel ───────────────────────────────────────────────── */}
-        <div className="hidden sm:flex w-[188px] shrink-0 flex-col rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-hidden"
+        <div className="hidden sm:flex w-[280px] shrink-0 flex-col rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-hidden"
           style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
         >
           {/* Panel header */}
@@ -405,7 +405,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                         : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                     )}
                   >
-                    {p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name}
+                    {p.name.length > 16 ? p.name.slice(0, 16) + '…' : p.name}
                   </button>
                 ))}
               </div>
