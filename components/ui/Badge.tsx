@@ -32,10 +32,10 @@ export function StatusBadge({ status }: { status: Status }) {
     todo: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400',
     in_progress: 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900',
     done: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500',
-    deferred: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500',
+    follow_up: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500',
   };
   const labels: Record<Status, string> = {
-    todo: 'To Do', in_progress: 'In Progress', done: 'Done', deferred: 'Deferred',
+    todo: 'To Do', in_progress: 'In Progress', done: 'Done', follow_up: 'Follow Up',
   };
   return <Badge className={styles[status]}>{labels[status]}</Badge>;
 }

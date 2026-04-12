@@ -34,7 +34,7 @@ type SortKey = 'title' | 'priority' | 'status' | 'dueDate';
 type SortDir = 'asc' | 'desc';
 
 const PRIORITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-const STATUS_ORDER: Record<string, number> = { in_progress: 0, todo: 1, deferred: 2, done: 3 };
+const STATUS_ORDER: Record<string, number> = { in_progress: 0, todo: 1, follow_up: 2, done: 3 };
 
 export function TaskTable({
   tasks,
@@ -337,11 +337,11 @@ function StatusChip({ status }: { status: Task['status'] }) {
   const styles: Record<Task['status'], string> = {
     in_progress: 'bg-accent-cyan/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-cyan/40',
     todo:        'border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400',
-    deferred:    'text-zinc-400 dark:text-zinc-500 italic',
+    follow_up:    'text-zinc-400 dark:text-zinc-500 italic',
     done:        'text-zinc-300 dark:text-zinc-600',
   };
   const labels: Record<Task['status'], string> = {
-    in_progress: 'In Progress', todo: 'To Do', deferred: 'Deferred', done: 'Done',
+    in_progress: 'In Progress', todo: 'To Do', follow_up: 'Follow Up', done: 'Done',
   };
   return (
     <span className={cn('text-[11px] font-medium px-2 py-0.5 rounded-md whitespace-nowrap', styles[status])}>
