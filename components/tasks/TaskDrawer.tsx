@@ -239,13 +239,6 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
   const workstreamProjects = projects.filter((p) => p.workstream === (editing ? form?.workstream : task?.workstream));
   const taskProject = projects.find((p) => p.id === task?.projectId);
 
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{label}</p>
-      {children}
-    </div>
-  );
-
   return (
     <AnimatePresence>
       {open && task && form && (
@@ -627,6 +620,15 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
     </>
   )}
     </AnimatePresence>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">{label}</p>
+      {children}
+    </div>
   );
 }
 
