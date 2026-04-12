@@ -23,11 +23,11 @@ import {
 } from 'lucide-react';
 
 function StatusIcon({ status }: { status: Task['status'] }) {
-  if (status === 'done')        return <CheckCircle2 size={15} className="text-accent-green" />;
-  if (status === 'in_progress') return <PlayCircle   size={15} className="text-accent-cyan" />;
-  if (status === 'follow_up')   return <Bell         size={15} className="text-accent-orange" />;
-  if (status === 'send_mail')   return <Mail         size={15} className="text-violet-400" />;
-  return <Circle size={15} className="text-zinc-300 dark:text-zinc-600" />;
+  if (status === 'done')        return <CheckCircle2 size={15} style={{ color: '#4ade80' }} />;
+  if (status === 'in_progress') return <PlayCircle   size={15} style={{ color: '#00C1FF' }} />;
+  if (status === 'follow_up')   return <Bell         size={15} style={{ color: '#FF9900' }} />;
+  if (status === 'send_mail')   return <Mail         size={15} style={{ color: '#a78bfa' }} />;
+  return <Circle size={15} style={{ color: '#a1a1aa' }} />;
 }
 
 interface TaskTableProps {

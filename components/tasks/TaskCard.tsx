@@ -106,11 +106,11 @@ export function TaskCard({
 }
 
 function StatusIcon({ status }: { status: Task['status'] }) {
-  if (status === 'done')        return <CheckCircle2 className="w-4 h-4 text-accent-green fill-accent-green/20" />;
-  if (status === 'in_progress') return <PlayCircle   className="w-4 h-4 text-accent-cyan" />;
-  if (status === 'follow_up')   return <Bell         className="w-4 h-4 text-accent-orange" />;
-  if (status === 'send_mail')   return <Mail         className="w-4 h-4 text-violet-400" />;
-  return <Circle className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />;
+  if (status === 'done')        return <CheckCircle2 className="w-4 h-4" style={{ color: '#4ade80' }} />;
+  if (status === 'in_progress') return <PlayCircle   className="w-4 h-4" style={{ color: '#00C1FF' }} />;
+  if (status === 'follow_up')   return <Bell         className="w-4 h-4" style={{ color: '#FF9900' }} />;
+  if (status === 'send_mail')   return <Mail         className="w-4 h-4" style={{ color: '#a78bfa' }} />;
+  return <Circle className="w-4 h-4" style={{ color: '#a1a1aa' }} />;
 }
 
 interface TaskMenuProps {
