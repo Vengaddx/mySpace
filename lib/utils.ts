@@ -47,7 +47,7 @@ export function priorityLabel(p: Priority): string {
 }
 
 export function statusLabel(s: Status): string {
-  const map: Record<Status, string> = { todo: 'To Do', in_progress: 'In Progress', done: 'Done', deferred: 'Deferred' };
+  const map: Record<Status, string> = { todo: 'To Do', in_progress: 'In Progress', done: 'Done', follow_up: 'Follow Up' };
   return map[s];
 }
 

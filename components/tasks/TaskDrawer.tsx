@@ -123,7 +123,7 @@ const STATUS_OPTIONS: { value: Status; label: string; active: string; inactive: 
   { value: 'todo',        label: 'To Do',       active: 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900',        inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
   { value: 'in_progress', label: 'In Progress',  active: 'bg-accent-cyan/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-cyan/60', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
   { value: 'done',        label: 'Done',         active: 'bg-accent-green/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-green/50', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
-  { value: 'deferred',    label: 'Deferred',     active: 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300',    inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
+  { value: 'follow_up',   label: 'Follow Up',    active: 'bg-accent-orange/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-orange/50', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
 ];
 
 const PRIORITY_OPTIONS: { value: Priority; label: string; active: string; inactive: string }[] = [
