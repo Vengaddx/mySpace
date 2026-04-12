@@ -137,7 +137,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   const [mobileDayOffset, setMobileDayOffset] = useState(0);
   const [isMobile,        setIsMobile]        = useState(false);
   const [nowPx,           setNowPx]           = useState(getNowPx);
-  const [panelProjectId,  setPanelProjectId]  = useState<string | null>(null);
+  const [panelProjectIds, setPanelProjectIds] = useState<string[]>([]);
 
   // ── Drag visual state ─────────────────────────────────────────────────────
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
@@ -241,8 +241,10 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   }, [unscheduledTasks, projects]);
 
   const filteredUnscheduled = useMemo(() =>
-    panelProjectId ? unscheduledTasks.filter(t => t.projectId === panelProjectId) : unscheduledTasks,
-    [unscheduledTasks, panelProjectId],
+    panelProjectIds.length > 0
+      ? unscheduledTasks.filter(t => t.projectId != null && panelProjectIds.includes(t.projectId))
+      : unscheduledTasks,
+    [unscheduledTasks, panelProjectIds],
   );
 
   // ── Global pointer handlers ───────────────────────────────────────────────
@@ -805,23 +807,28 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
           </p>
         </div>
 
-        {/* Project filter chips */}
+        {/* Project filter chips — multi-select */}
         {unscheduledProjects.length > 0 && (
           <div className="px-3 py-2.5 shrink-0 border-b border-zinc-50 dark:border-zinc-800/40">
             <div className="flex flex-wrap gap-1">
               <button
-                onClick={() => setPanelProjectId(null)}
-                className={cn('text-[9px] font-semibold px-2 py-1 rounded-full transition-all', panelProjectId === null ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700')}
+                onClick={() => setPanelProjectIds([])}
+                className={cn('text-[9px] font-semibold px-2 py-1 rounded-full transition-all', panelProjectIds.length === 0 ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700')}
               >All</button>
-              {unscheduledProjects.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => setPanelProjectId(p.id)}
-                  className={cn('text-[9px] font-semibold px-2 py-1 rounded-full transition-all', panelProjectId === p.id ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700')}
-                >
-                  {p.name.length > 16 ? p.name.slice(0, 16) + '…' : p.name}
-                </button>
-              ))}
+              {unscheduledProjects.map(p => {
+                const active = panelProjectIds.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setPanelProjectIds(prev =>
+                      active ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                    )}
+                    className={cn('text-[9px] font-semibold px-2 py-1 rounded-full transition-all', active ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900' : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700')}
+                  >
+                    {p.name.length > 16 ? p.name.slice(0, 16) + '…' : p.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
