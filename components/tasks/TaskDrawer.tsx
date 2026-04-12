@@ -4,8 +4,30 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task, Priority, Status, Workstream, Project, RecurrenceType } from '@/types';
 import { cn, formatDate } from '@/lib/utils';
-import { X, Calendar, Clock, Star, Zap, StickyNote, FolderOpen, Bell, RefreshCw, ChevronDown, Trash2 } from 'lucide-react';
+import { X, Calendar, Clock, Star, Zap, StickyNote, FolderOpen, Bell, RefreshCw, ChevronDown, Trash2, Plus, Check, ListChecks } from 'lucide-react';
 import { PriorityBadge, StatusBadge, WorkstreamBadge } from '@/components/ui/Badge';
+
+// ── Notes / Next-steps data model ──────────────────────────────────────────
+// Stored as JSON in the task.notes field; plain-text notes are preserved as-is.
+interface Step { id: string; text: string; done: boolean }
+interface NotesData { notes: string; steps: Step[] }
+
+function parseNotes(raw: string | undefined): NotesData {
+  if (!raw) return { notes: '', steps: [] };
+  try {
+    const p = JSON.parse(raw);
+    if (p && typeof p === 'object' && '__v2' in p) {
+      return { notes: p.notes ?? '', steps: p.steps ?? [] };
+    }
+  } catch { /* not JSON — treat as plain text */ }
+  return { notes: raw, steps: [] };
+}
+
+function serializeNotes(d: NotesData): string | undefined {
+  if (!d.notes.trim() && d.steps.length === 0) return undefined;
+  if (d.steps.length === 0) return d.notes || undefined;
+  return JSON.stringify({ __v2: true, notes: d.notes, steps: d.steps });
+}
 
 // ── Date/time helpers ──────────────────────────────────────────────────────
 function getLocalDateValue(iso: string): string {
@@ -149,8 +171,11 @@ interface TaskDrawerProps {
 export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [] }: TaskDrawerProps) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Task | null>(null);
+  const [notesData, setNotesData] = useState<NotesData>({ notes: '', steps: [] });
+  const [newStepText, setNewStepText] = useState('');
   const [isMobile, setIsMobile] = useState(false);
-  const touchStartY = useRef<number | null>(null);
+  const touchStartY  = useRef<number | null>(null);
+  const notesRef     = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -160,11 +185,55 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
   }, []);
 
   useEffect(() => {
-    if (task) { setForm({ ...task }); setEditing(false); }
+    if (task) {
+      setForm({ ...task });
+      setNotesData(parseNotes(task.notes));
+      setNewStepText('');
+      setEditing(false);
+    }
   }, [task]);
 
+  // Auto-grow the notes textarea
+  useEffect(() => {
+    const el = notesRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [notesData.notes, editing]);
+
   const handleSave = () => {
-    if (form) { onSave?.(form); setEditing(false); }
+    if (form) {
+      onSave?.({ ...form, notes: serializeNotes(notesData) });
+      setEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (task) setNotesData(parseNotes(task.notes));
+    setNewStepText('');
+    setEditing(false);
+  };
+
+  // Toggle a step done/undone — works in both view and edit mode, saves immediately
+  const toggleStep = (id: string) => {
+    const updated = { ...notesData, steps: notesData.steps.map(s => s.id === id ? { ...s, done: !s.done } : s) };
+    setNotesData(updated);
+    if (task && form) onSave?.({ ...form, notes: serializeNotes(updated) });
+  };
+
+  const addStep = () => {
+    const text = newStepText.trim();
+    if (!text) return;
+    setNotesData(d => ({ ...d, steps: [...d.steps, { id: crypto.randomUUID(), text, done: false }] }));
+    setNewStepText('');
+  };
+
+  const removeStep = (id: string) => {
+    setNotesData(d => ({ ...d, steps: d.steps.filter(s => s.id !== id) }));
+  };
+
+  const updateStepText = (id: string, text: string) => {
+    setNotesData(d => ({ ...d, steps: d.steps.map(s => s.id === id ? { ...s, text } : s) }));
   };
 
   const workstreamProjects = projects.filter((p) => p.workstream === (editing ? form?.workstream : task?.workstream));
@@ -236,7 +305,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                 {editing && (
                   <>
                     <button
-                      onClick={() => setEditing(false)}
+                      onClick={handleCancel}
                       className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
                       Cancel
@@ -455,20 +524,103 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
           <Field label="Notes">
             {editing ? (
               <textarea
-                className="w-full text-sm text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900 rounded-xl px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-400 resize-none transition-colors"
-                rows={4}
-                placeholder="Add notes..."
-                value={form.notes || ''}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                ref={notesRef}
+                className="w-full text-sm text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900 rounded-xl px-3 py-2.5 border border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-400 resize-none transition-colors overflow-hidden"
+                rows={3}
+                placeholder="Add notes…"
+                value={notesData.notes}
+                onChange={(e) => setNotesData(d => ({ ...d, notes: e.target.value }))}
               />
             ) : (
               <div className="flex items-start gap-2">
                 <StickyNote className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-600 mt-0.5 shrink-0" />
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  {task.notes || 'No notes added.'}
-                </p>
+                {notesData.notes ? (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap break-words">
+                    {notesData.notes}
+                  </p>
+                ) : (
+                  <p className="text-sm text-zinc-300 dark:text-zinc-600 italic">No notes added.</p>
+                )}
               </div>
             )}
+          </Field>
+
+          {/* Next Steps */}
+          <Field label="Next Steps">
+            <div className="space-y-1.5">
+
+              {/* Existing steps */}
+              {notesData.steps.length === 0 && !editing && (
+                <p className="text-sm text-zinc-300 dark:text-zinc-600 italic flex items-center gap-2">
+                  <ListChecks className="w-3.5 h-3.5 shrink-0" />
+                  No next steps yet.
+                </p>
+              )}
+
+              {notesData.steps.map((step) => (
+                <div key={step.id} className="flex items-start gap-2.5 group">
+                  {/* Checkbox — always interactive */}
+                  <button
+                    onClick={() => toggleStep(step.id)}
+                    className={cn(
+                      'mt-0.5 w-4 h-4 rounded flex items-center justify-center shrink-0 border transition-all',
+                      step.done
+                        ? 'bg-zinc-900 dark:bg-white border-zinc-900 dark:border-white'
+                        : 'border-zinc-300 dark:border-zinc-600 hover:border-zinc-500 dark:hover:border-zinc-400'
+                    )}
+                  >
+                    {step.done && <Check className="w-2.5 h-2.5 text-white dark:text-zinc-900" strokeWidth={3} />}
+                  </button>
+
+                  {/* Text — editable in edit mode, read-only otherwise */}
+                  {editing ? (
+                    <input
+                      className="flex-1 text-sm bg-transparent text-zinc-700 dark:text-zinc-300 outline-none border-b border-transparent focus:border-zinc-300 dark:focus:border-zinc-600 transition-colors py-0"
+                      value={step.text}
+                      onChange={(e) => updateStepText(step.id, e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addStep(); } }}
+                      placeholder="Step description…"
+                    />
+                  ) : (
+                    <span className={cn(
+                      'flex-1 text-sm leading-snug',
+                      step.done ? 'line-through text-zinc-400 dark:text-zinc-600' : 'text-zinc-700 dark:text-zinc-300'
+                    )}>
+                      {step.text}
+                    </span>
+                  )}
+
+                  {/* Delete — edit mode only */}
+                  {editing && (
+                    <button
+                      onClick={() => removeStep(step.id)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-zinc-300 dark:text-zinc-600 hover:text-red-400 dark:hover:text-red-500 transition-all"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* Add new step — edit mode only */}
+              {editing && (
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={addStep}
+                    className="w-4 h-4 rounded border border-dashed border-zinc-300 dark:border-zinc-600 flex items-center justify-center shrink-0 hover:border-zinc-500 dark:hover:border-zinc-400 transition-colors"
+                  >
+                    <Plus className="w-2.5 h-2.5 text-zinc-400 dark:text-zinc-500" />
+                  </button>
+                  <input
+                    className="flex-1 text-sm bg-transparent text-zinc-700 dark:text-zinc-300 placeholder:text-zinc-300 dark:placeholder:text-zinc-600 outline-none border-b border-transparent focus:border-zinc-300 dark:focus:border-zinc-600 transition-colors"
+                    placeholder="Add a next step…"
+                    value={newStepText}
+                    onChange={(e) => setNewStepText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addStep(); } }}
+                  />
+                </div>
+              )}
+            </div>
           </Field>
         </div>
       </motion.div>
