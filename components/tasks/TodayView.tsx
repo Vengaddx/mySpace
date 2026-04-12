@@ -354,8 +354,8 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
         </div>
 
         {/* ── Task Pool panel ───────────────────────────────────────────────── */}
-        <div className="hidden sm:flex w-[280px] shrink-0 flex-col rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-hidden"
-          style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
+        <div className="hidden sm:flex shrink-0 flex-col rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-hidden"
+          style={{ width: 280, maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
         >
           {/* Panel header */}
           <div className="px-4 pt-4 pb-3 shrink-0 border-b border-zinc-50 dark:border-zinc-800/60">
