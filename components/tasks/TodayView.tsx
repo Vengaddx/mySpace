@@ -3,7 +3,7 @@
 import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { Task, Project } from '@/types';
 import { cn, isOverdue } from '@/lib/utils';
-import { LayoutList } from 'lucide-react';
+import { LayoutList, ChevronDown } from 'lucide-react';
 
 const SNAP_MIN = 15;
 
@@ -107,6 +107,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   const [dropPx, setDropPx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [poolProjectId, setPoolProjectId] = useState<string | null>(null);
+  const [overdueOpen, setOverdueOpen] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -193,30 +194,47 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
           <span className="text-sm text-zinc-400 dark:text-zinc-500">{dateStr}</span>
         </div>
         <div className="flex items-center gap-3 text-[11px] text-zinc-400 dark:text-zinc-500">
-          {overdueTasks.length > 0 && (
-            <span className="text-accent-orange font-semibold">{overdueTasks.length} overdue</span>
-          )}
           {totalOpen > 0 && <span>{totalOpen} today</span>}
         </div>
       </div>
 
-      {/* ── Overdue strip ───────────────────────────────────────────────────── */}
+      {/* ── Overdue collapsible bar ─────────────────────────────────────────── */}
       {overdueTasks.length > 0 && (
-        <div className="mb-4 rounded-2xl overflow-hidden border border-accent-orange/20 bg-accent-orange/5 dark:bg-accent-orange/[0.06]">
-          <div className="px-4 py-2 border-b border-accent-orange/10">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent-orange">Overdue</p>
-          </div>
-          <div className="divide-y divide-accent-orange/10">
-            {overdueTasks.map(task => (
-              <OverdueRow
-                key={task.id}
-                task={task}
-                projectMap={projectMap}
-                onEdit={onEditTask}
-                onDone={id => onUpdateTask(id, { status: 'done' })}
-              />
-            ))}
-          </div>
+        <div className="mb-3 rounded-xl overflow-hidden border border-accent-orange/20 bg-accent-orange/5 dark:bg-accent-orange/[0.06]">
+          {/* Collapsed header — always visible */}
+          <button
+            onClick={() => setOverdueOpen(o => !o)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent-orange/5 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-accent-orange shrink-0" />
+            <span className="text-[11px] font-semibold text-accent-orange">
+              {overdueTasks.length} overdue
+            </span>
+            {!overdueOpen && (
+              <span className="text-[10px] text-accent-orange/60 truncate flex-1 text-left">
+                — {overdueTasks.slice(0, 2).map(t => t.title).join(', ')}{overdueTasks.length > 2 ? ` +${overdueTasks.length - 2}` : ''}
+              </span>
+            )}
+            <ChevronDown
+              size={12}
+              className={cn('ml-auto shrink-0 text-accent-orange/60 transition-transform duration-200', overdueOpen && 'rotate-180')}
+            />
+          </button>
+
+          {/* Expanded list */}
+          {overdueOpen && (
+            <div className="border-t border-accent-orange/10 divide-y divide-accent-orange/10">
+              {overdueTasks.map(task => (
+                <OverdueRow
+                  key={task.id}
+                  task={task}
+                  projectMap={projectMap}
+                  onEdit={onEditTask}
+                  onDone={id => onUpdateTask(id, { status: 'done' })}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
