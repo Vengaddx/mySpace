@@ -589,13 +589,14 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
       {/* ── Inbox / Unscheduled Panel — hidden on mobile, shown on iPad+ ── */}
       <div
         className={cn(
-          'hidden md:flex w-[200px] shrink-0 flex-col rounded-2xl border bg-white dark:bg-zinc-950 overflow-hidden transition-all duration-150',
+          'hidden md:flex shrink-0 flex-col rounded-2xl border bg-white dark:bg-zinc-950 overflow-hidden transition-all duration-150',
           inboxHov
             ? 'border-zinc-400 dark:border-zinc-500 shadow-lg scale-[1.01]'
             : isDragging
             ? 'border-dashed border-zinc-300 dark:border-zinc-600 animate-pulse'
             : 'border-zinc-100 dark:border-zinc-800/80'
         )}
+        style={{ width: 280 }}
         onDragOver={isDragging ? e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setInboxHov(true); setDropTarget(null); } : undefined}
         onDragLeave={isDragging ? () => setInboxHov(false) : undefined}
         onDrop={isDragging ? handleInboxDrop : undefined}
@@ -649,7 +650,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                       : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                   )}
                 >
-                  {p.name.length > 10 ? p.name.slice(0, 10) + '…' : p.name}
+                  {p.name.length > 16 ? p.name.slice(0, 16) + '…' : p.name}
                 </button>
               ))}
             </div>
