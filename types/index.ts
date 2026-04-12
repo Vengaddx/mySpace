@@ -1,5 +1,5 @@
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
-export type Status = 'todo' | 'in_progress' | 'done' | 'follow_up';
+export type Status = 'todo' | 'in_progress' | 'done' | 'follow_up' | 'send_mail';
 export type Category = 'personal' | 'work';
 export type Workstream = 'aramco' | 'satorp' | 'pmo' | 'personal';
 export type RecurrenceType = 'none' | 'daily' | 'weekdays' | 'weekly';

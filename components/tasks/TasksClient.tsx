@@ -362,6 +362,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                   { value: 'in_progress', label: 'In Progress' },
                   { value: 'done', label: 'Done' },
                   { value: 'follow_up', label: 'Follow Up' },
+                  { value: 'send_mail', label: 'Send Mail' },
                 ]}
                 onChange={(v) => setFilterStatus(v as Status | 'all')}
               />
