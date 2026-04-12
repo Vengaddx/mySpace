@@ -3,7 +3,15 @@
 import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { Task, Project } from '@/types';
 import { cn, isOverdue } from '@/lib/utils';
-import { LayoutList, ChevronDown } from 'lucide-react';
+import { LayoutList, ChevronDown, Circle, PlayCircle, Bell, Mail, CheckCircle2 } from 'lucide-react';
+
+function StatusIcon({ status }: { status: Task['status'] }) {
+  if (status === 'done')        return <CheckCircle2 size={11} style={{ color: '#4ade80' }} />;
+  if (status === 'in_progress') return <PlayCircle   size={11} style={{ color: '#00C1FF' }} />;
+  if (status === 'follow_up')   return <Bell         size={11} style={{ color: '#FF9900' }} />;
+  if (status === 'send_mail')   return <Mail         size={11} style={{ color: '#a78bfa' }} />;
+  return <Circle size={11} style={{ color: '#a1a1aa' }} />;
+}
 
 const SNAP_MIN = 15;
 
@@ -442,9 +450,12 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                     <div className={cn('w-[3px] shrink-0', PRIORITY_BAR[task.priority] ?? PRIORITY_BAR.medium)} />
 
                     <div className="flex-1 min-w-0 px-2.5 py-2">
-                      <p className={cn('text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 leading-snug line-clamp-2', task.status === 'done' && 'line-through opacity-50')}>
-                        {task.title}
-                      </p>
+                      <div className="flex items-start justify-between gap-1">
+                        <p className={cn('text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 leading-snug line-clamp-2', task.status === 'done' && 'line-through opacity-50')}>
+                          {task.title}
+                        </p>
+                        <StatusIcon status={task.status} />
+                      </div>
                       {proj ? (
                         <p className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 mt-1 truncate">
                           {proj.name}
