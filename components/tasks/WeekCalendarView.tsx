@@ -93,14 +93,6 @@ function needsDarkText(hex: string): boolean {
   return luminance > 0.55;
 }
 
-// Priority accent bar for the inbox panel
-const PRIORITY_BAR: Record<string, string> = {
-  critical: 'bg-accent-orange',
-  high:     'bg-accent-lime',
-  medium:   'bg-accent-cyan',
-  low:      'bg-zinc-300 dark:bg-zinc-600',
-};
-
 const RECURRENCE_LABEL: Record<RecurrenceType, string> = {
   none: '', daily: 'Daily', weekdays: 'Weekdays', weekly: 'Weekly',
 };
@@ -698,8 +690,8 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                   onDragEnd={endDrag}
                   className="group relative flex items-stretch gap-0 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700 cursor-grab active:cursor-grabbing transition-all duration-150 hover:shadow-sm active:opacity-50 overflow-hidden"
                 >
-                  {/* Priority accent bar */}
-                  <div className={cn('w-[3px] shrink-0', PRIORITY_BAR[task.priority] ?? PRIORITY_BAR.medium)} />
+                  {/* Workstream accent bar */}
+                  <div className="w-[3px] shrink-0" style={{ backgroundColor: WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa' }} />
 
                   <div className="flex-1 min-w-0 px-2.5 py-2">
                     <div className="flex items-start justify-between gap-1">
