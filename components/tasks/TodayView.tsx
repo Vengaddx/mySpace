@@ -150,7 +150,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   const [nowPx, setNowPx] = useState(getNowPx);
 
   // ── Other UI ──────────────────────────────────────────────────────────────────
-  const [poolProjectId, setPoolProjectId] = useState<string | null>(null);
+  const [poolProjectIds, setPoolProjectIds] = useState<string[]>([]);
   const [overdueOpen,   setOverdueOpen]   = useState(false);
 
   // Scroll to current time on mount
@@ -329,8 +329,10 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   }, [unscheduledTasks, projects]);
 
   const filteredPool = useMemo(() =>
-    poolProjectId ? unscheduledTasks.filter(t => t.projectId === poolProjectId) : unscheduledTasks,
-    [unscheduledTasks, poolProjectId],
+    poolProjectIds.length > 0
+      ? unscheduledTasks.filter(t => t.projectId != null && poolProjectIds.includes(t.projectId))
+      : unscheduledTasks,
+    [unscheduledTasks, poolProjectIds],
   );
 
   const totalOpen  = scheduledTasks.length + unscheduledTasks.length;
@@ -605,35 +607,40 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
             </p>
           </div>
 
-          {/* Project filter chips */}
+          {/* Project filter chips — multi-select */}
           {poolProjects.length > 0 && (
             <div className="px-3 py-2.5 shrink-0 border-b border-zinc-50 dark:border-zinc-800/40">
               <div className="flex flex-wrap gap-1">
                 <button
-                  onClick={() => setPoolProjectId(null)}
+                  onClick={() => setPoolProjectIds([])}
                   className={cn(
                     'text-[9px] font-semibold px-2 py-1 rounded-full transition-all',
-                    poolProjectId === null
+                    poolProjectIds.length === 0
                       ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
                       : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700',
                   )}
                 >
                   All
                 </button>
-                {poolProjects.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPoolProjectId(p.id)}
-                    className={cn(
-                      'text-[9px] font-semibold px-2 py-1 rounded-full transition-all',
-                      poolProjectId === p.id
-                        ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
-                        : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700',
-                    )}
-                  >
-                    {p.name.length > 16 ? p.name.slice(0, 16) + '…' : p.name}
-                  </button>
-                ))}
+                {poolProjects.map(p => {
+                  const active = poolProjectIds.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setPoolProjectIds(prev =>
+                        active ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                      )}
+                      className={cn(
+                        'text-[9px] font-semibold px-2 py-1 rounded-full transition-all',
+                        active
+                          ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900'
+                          : 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700',
+                      )}
+                    >
+                      {p.name.length > 16 ? p.name.slice(0, 16) + '…' : p.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
