@@ -69,38 +69,34 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
     return tasks.filter((t) => t.workstream === workstreamKey);
   }, [tasks, workstreamKey]);
 
-  // Tasks for the main table: filtered by project, search, priority, status
-  const tableTasks = useMemo(() => {
+  // Shared filter base (all views): project + search + priority + status
+  const filteredTasks = useMemo(() => {
     let result = workstreamTasks;
-
-    if (selectedProjectId !== null) {
-      result = result.filter((t) => t.projectId === selectedProjectId);
-    }
-
+    if (selectedProjectId !== null) result = result.filter((t) => t.projectId === selectedProjectId);
     if (filterPriority !== 'all') result = result.filter((t) => t.priority === filterPriority);
-    if (filterStatus !== 'all') {
-      result = result.filter((t) => t.status === filterStatus);
-    }
-
+    if (filterStatus !== 'all') result = result.filter((t) => t.status === filterStatus);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((t) => t.title.toLowerCase().includes(q));
     }
+    return result;
+  }, [workstreamTasks, selectedProjectId, filterPriority, filterStatus, search]);
 
-    result.sort((a, b) => {
+  // Sorted for list view
+  const tableTasks = useMemo(() => {
+    return [...filteredTasks].sort((a, b) => {
       if (a.priority === 'critical' && b.priority !== 'critical') return -1;
       if (b.priority === 'critical' && a.priority !== 'critical') return 1;
       if (isOverdue(a.dueDate, a.status, a.isUnscheduled) && !isOverdue(b.dueDate, b.status, b.isUnscheduled)) return -1;
       if (isOverdue(b.dueDate, b.status, b.isUnscheduled) && !isOverdue(a.dueDate, a.status, a.isUnscheduled)) return 1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
-
-    return result;
-  }, [workstreamTasks, selectedProjectId, filterPriority, filterStatus, search]);
+  }, [filteredTasks]);
 
   const openCount = tasks.filter((t) => t.status !== 'done').length;
   const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.status, t.isUnscheduled)).length;
-  const hasActiveFilters = filterPriority !== 'all' || filterStatus !== 'all';
+  const activeFilterCount = (filterPriority !== 'all' ? 1 : 0) + (filterStatus !== 'all' ? 1 : 0);
+  const hasActiveFilters = activeFilterCount > 0;
 
   const selectedProject = selectedProjectId
     ? workstreamProjects.find((p) => p.id === selectedProjectId) ?? null
@@ -325,15 +321,11 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
               >
                 <SlidersHorizontal size={12} />
                 <span className="hidden sm:inline">Filter</span>
-              </button>
-              <button
-                onClick={() => {
-                  setQuickAddOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 transition-colors shrink-0"
-              >
-                <Plus size={12} />
-                <span className="hidden sm:inline">Task</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                    {activeFilterCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -357,7 +349,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 label="Status"
                 value={filterStatus}
                 options={[
-                  { value: 'all', label: 'Open tasks' },
+                  { value: 'all', label: 'All Statuses' },
                   { value: 'todo', label: 'To Do' },
                   { value: 'in_progress', label: 'In Progress' },
                   { value: 'done', label: 'Done' },
@@ -428,24 +420,20 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
           {taskView === 'week' && (
             <WeekCalendarView
-              tasks={workstreamTasks.filter(
-                (t) => (selectedProjectId === null || t.projectId === selectedProjectId) && !t.isUnscheduled
-              )}
+              tasks={filteredTasks.filter((t) => !t.isUnscheduled)}
               projects={projects}
               onEditTask={openDrawer}
               onUpdateTask={(id, updates) => {
                 setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
                 api(`/api/tasks/${id}`, 'PUT', updates);
               }}
-              unscheduledTasks={workstreamTasks.filter(t => (t.isUnscheduled ?? false) && t.status !== 'done')}
+              unscheduledTasks={filteredTasks.filter(t => (t.isUnscheduled ?? false) && t.status !== 'done')}
             />
           )}
 
           {taskView === 'today' && (
             <TodayView
-              tasks={workstreamTasks.filter(
-                t => selectedProjectId === null || t.projectId === selectedProjectId
-              )}
+              tasks={filteredTasks}
               projects={projects}
               onEditTask={openDrawer}
               onUpdateTask={(id, updates) => {
