@@ -259,7 +259,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
             className="relative"
             style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}
             onDragOver={handleDragOver}
-            onDragLeave={() => { dropPxRef.current = null; setDropPx(null); }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { dropPxRef.current = null; setDropPx(null); } }}
             onDrop={handleDrop}
           >
 
@@ -443,8 +443,11 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                 return (
                   <button
                     key={task.id}
+                    draggable
+                    onDragStart={() => { draggingId.current = task.id; setIsDragging(true); }}
+                    onDragEnd={() => { draggingId.current = null; dropPxRef.current = null; setDropPx(null); setIsDragging(false); }}
                     onClick={() => onEditTask(task)}
-                    className="w-full group relative flex items-stretch gap-0 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700 text-left transition-all duration-150 hover:shadow-sm overflow-hidden"
+                    className="w-full group relative flex items-stretch gap-0 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700 text-left transition-all duration-150 hover:shadow-sm overflow-hidden cursor-grab active:cursor-grabbing"
                   >
                     {/* Priority accent bar */}
                     <div className={cn('w-[3px] shrink-0', PRIORITY_BAR[task.priority] ?? PRIORITY_BAR.medium)} />

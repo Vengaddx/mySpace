@@ -163,6 +163,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
   const [notesData,   setNotesData]   = useState<NotesData>({ notes: '', steps: [] });
   const [newStepText, setNewStepText] = useState('');
   const [isMobile,    setIsMobile]    = useState(false);
+  const [saved,       setSaved]       = useState(false);
   const touchStartY = useRef<number | null>(null);
   const notesRef    = useRef<HTMLTextAreaElement>(null);
   const titleRef    = useRef<HTMLTextAreaElement>(null);
@@ -201,6 +202,8 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
   const handleSave = () => {
     if (!form) return;
     onSave?.({ ...form, notes: serializeNotes(notesData) });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1800);
   };
 
   // Steps — checkboxes save immediately; text edits batched on Save
@@ -280,10 +283,15 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                   )}
                   <button
                     onClick={handleSave}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors"
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
+                      saved
+                        ? 'bg-accent-green/20 text-zinc-700 dark:text-zinc-200 ring-1 ring-accent-green/50'
+                        : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-100'
+                    )}
                   >
-                    <Save className="w-3.5 h-3.5" />
-                    Save
+                    {saved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                    {saved ? 'Saved!' : 'Save'}
                   </button>
                   <button
                     onClick={onClose}
@@ -407,22 +415,6 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                   </Section>
                 </div>
 
-                {/* Focus toggles */}
-                <Section label="Focus">
-                  <div className="flex gap-2">
-                    <ToggleChip
-                      label="Week Focus"
-                      active={form.isWeekFocus}
-                      onToggle={() => setForm({ ...form, isWeekFocus: !form.isWeekFocus })}
-                    />
-                    <ToggleChip
-                      label="Month Focus"
-                      active={form.isMonthFocus}
-                      onToggle={() => setForm({ ...form, isMonthFocus: !form.isMonthFocus })}
-                    />
-                  </div>
-                </Section>
-
                 {/* Divider */}
                 <div className="h-px bg-zinc-100 dark:bg-zinc-800/80" />
 
@@ -530,22 +522,6 @@ function SelectInput({ value, options, onChange }: {
     >
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
-  );
-}
-
-function ToggleChip({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className={cn(
-        'px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all',
-        active
-          ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white'
-          : 'bg-transparent text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
-      )}
-    >
-      {label}
-    </button>
   );
 }
 
