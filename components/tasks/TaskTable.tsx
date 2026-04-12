@@ -5,6 +5,7 @@ import { Task } from '@/types';
 import { cn, formatDateShort, isOverdue, isToday } from '@/lib/utils';
 import {
   CheckCircle2,
+  Circle,
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
@@ -12,6 +13,7 @@ import {
   AlertCircle,
   Calendar,
   Bell,
+  Mail,
   Pencil,
   Trash2,
   Zap,
@@ -19,6 +21,14 @@ import {
   Star,
   CheckCircle,
 } from 'lucide-react';
+
+function StatusIcon({ status }: { status: Task['status'] }) {
+  if (status === 'done')        return <CheckCircle2 size={15} className="text-accent-green" />;
+  if (status === 'in_progress') return <PlayCircle   size={15} className="text-accent-cyan" />;
+  if (status === 'follow_up')   return <Bell         size={15} className="text-accent-orange" />;
+  if (status === 'send_mail')   return <Mail         size={15} className="text-violet-400" />;
+  return <Circle size={15} className="text-zinc-300 dark:text-zinc-600" />;
+}
 
 interface TaskTableProps {
   tasks: Task[];
@@ -212,16 +222,14 @@ function TaskRow({
         <span className="text-[11px] text-zinc-300 dark:text-zinc-600 tabular-nums">{sno}</span>
       </td>
 
-      {/* Checkbox */}
+      {/* Status icon */}
       <td className="pr-2 py-3.5 w-10" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => onStatusChange(task.id, isDone ? 'todo' : 'done')}
-          className="text-zinc-300 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          className="transition-opacity hover:opacity-70"
+          title={task.status}
         >
-          <CheckCircle2
-            size={15}
-            className={cn(isDone && 'text-zinc-400 dark:text-zinc-500 fill-zinc-100 dark:fill-zinc-800')}
-          />
+          <StatusIcon status={task.status} />
         </button>
       </td>
 
