@@ -45,8 +45,8 @@ export function MonthlyFocusView({
       .sort((a, b) => {
         if (a.priority === 'critical' && b.priority !== 'critical') return -1;
         if (b.priority === 'critical' && a.priority !== 'critical') return 1;
-        const aOver = isOverdue(a.dueDate, a.status);
-        const bOver = isOverdue(b.dueDate, b.status);
+        const aOver = isOverdue(a.dueDate, a.status, a.isUnscheduled);
+        const bOver = isOverdue(b.dueDate, b.status, b.isUnscheduled);
         if (aOver && !bOver) return -1;
         if (bOver && !aOver) return 1;
         if (a.status === 'done' && b.status !== 'done') return 1;
@@ -57,7 +57,7 @@ export function MonthlyFocusView({
 
   const open = monthTasks.filter((t) => t.status !== 'done');
   const done = monthTasks.filter((t) => t.status === 'done');
-  const overdue = open.filter((t) => isOverdue(t.dueDate, t.status));
+  const overdue = open.filter((t) => isOverdue(t.dueDate, t.status, t.isUnscheduled));
 
   if (monthTasks.length === 0) {
     return (

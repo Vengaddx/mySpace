@@ -159,7 +159,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
 
   const projectMap = useMemo(() => new Map(projects.map(p => [p.id, p])), [projects]);
 
-  const overdueTasks = useMemo(() => tasks.filter(t => isOverdue(t.dueDate, t.status)), [tasks]);
+  const overdueTasks = useMemo(() => tasks.filter(t => isOverdue(t.dueDate, t.status, t.isUnscheduled)), [tasks]);
 
   const todayOpen = useMemo(() =>
     tasks.filter(t =>

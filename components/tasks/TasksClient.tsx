@@ -90,8 +90,8 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
     result.sort((a, b) => {
       if (a.priority === 'critical' && b.priority !== 'critical') return -1;
       if (b.priority === 'critical' && a.priority !== 'critical') return 1;
-      if (isOverdue(a.dueDate, a.status) && !isOverdue(b.dueDate, b.status)) return -1;
-      if (isOverdue(b.dueDate, b.status) && !isOverdue(a.dueDate, a.status)) return 1;
+      if (isOverdue(a.dueDate, a.status, a.isUnscheduled) && !isOverdue(b.dueDate, b.status, b.isUnscheduled)) return -1;
+      if (isOverdue(b.dueDate, b.status, b.isUnscheduled) && !isOverdue(a.dueDate, a.status, a.isUnscheduled)) return 1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
 
@@ -99,7 +99,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   }, [workstreamTasks, selectedProjectId, filterPriority, filterStatus, search]);
 
   const openCount = tasks.filter((t) => t.status !== 'done').length;
-  const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.status)).length;
+  const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.status, t.isUnscheduled)).length;
   const hasActiveFilters = filterPriority !== 'all' || filterStatus !== 'all';
 
   const selectedProject = selectedProjectId
