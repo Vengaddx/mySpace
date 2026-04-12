@@ -41,11 +41,12 @@ const PRIORITY_LABELS: Record<Task['priority'], string> = {
 const STATUS_STYLES: Record<Task['status'], string> = {
   in_progress: 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900',
   todo: 'border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400',
-  follow_up: 'text-zinc-400 dark:text-zinc-500 italic',
+  follow_up: 'text-accent-orange/80 italic',
+  send_mail: 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-300',
   done: 'text-zinc-300 dark:text-zinc-600',
 };
 const STATUS_LABELS: Record<Task['status'], string> = {
-  in_progress: 'In Progress', todo: 'To Do', follow_up: 'Follow Up', done: 'Done',
+  in_progress: 'In Progress', todo: 'To Do', follow_up: 'Follow Up', send_mail: 'Send Mail', done: 'Done',
 };
 
 export function FocusTaskCard({

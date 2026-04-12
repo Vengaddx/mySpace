@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Task } from '@/types';
 import { cn, formatDateShort, isOverdue, isToday } from '@/lib/utils';
 import { PriorityBadge, StatusBadge, WorkstreamBadge } from '@/components/ui/Badge';
-import { Calendar, AlertCircle, Star, MoreHorizontal, CheckCircle2, PlayCircle, Pencil, Trash2, Zap } from 'lucide-react';
+import { Calendar, AlertCircle, Star, MoreHorizontal, CheckCircle2, Circle, PlayCircle, Bell, Mail, Pencil, Trash2, Zap } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
@@ -40,13 +40,14 @@ export function TaskCard({
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-start gap-2.5 min-w-0 flex-1">
           <button
-            className="mt-0.5 shrink-0 text-zinc-300 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+            className="mt-0.5 shrink-0 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               onStatusChange?.(task.id, task.status === 'done' ? 'todo' : 'done');
             }}
+            title={task.status}
           >
-            <CheckCircle2 className={cn('w-4 h-4', task.status === 'done' && 'text-zinc-400 dark:text-zinc-500 fill-zinc-200 dark:fill-zinc-700')} />
+            <StatusIcon status={task.status} />
           </button>
 
           <div className="min-w-0 flex-1">
@@ -104,6 +105,14 @@ export function TaskCard({
   );
 }
 
+function StatusIcon({ status }: { status: Task['status'] }) {
+  if (status === 'done')        return <CheckCircle2 className="w-4 h-4 text-accent-green fill-accent-green/20" />;
+  if (status === 'in_progress') return <PlayCircle   className="w-4 h-4 text-accent-cyan" />;
+  if (status === 'follow_up')   return <Bell         className="w-4 h-4 text-accent-orange" />;
+  if (status === 'send_mail')   return <Mail         className="w-4 h-4 text-violet-400" />;
+  return <Circle className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />;
+}
+
 interface TaskMenuProps {
   task: Task;
   onEdit: () => void;
@@ -128,6 +137,8 @@ function TaskMenu({ task, onEdit, onDelete, onStatusChange, onToggleCritical, on
       <MenuItem icon={<Pencil className="w-3.5 h-3.5" />} label="Edit" onClick={onEdit} />
       <MenuItem icon={<CheckCircle2 className="w-3.5 h-3.5" />} label="Mark Done" onClick={() => onStatusChange('done')} />
       <MenuItem icon={<PlayCircle className="w-3.5 h-3.5" />} label="In Progress" onClick={() => onStatusChange('in_progress')} />
+      <MenuItem icon={<Bell className="w-3.5 h-3.5" />} label="Follow Up" onClick={() => onStatusChange('follow_up')} />
+      <MenuItem icon={<Mail className="w-3.5 h-3.5" />} label="Send Mail" onClick={() => onStatusChange('send_mail')} />
       <MenuItem icon={<Zap className="w-3.5 h-3.5" />} label={task.priority === 'critical' ? 'Remove Critical' : 'Mark Critical'} onClick={onToggleCritical} />
       <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-1" />
       <MenuItem icon={<Trash2 className="w-3.5 h-3.5" />} label="Delete" onClick={onDelete} className="text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30" />
