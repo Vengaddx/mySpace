@@ -175,7 +175,8 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   };
   const handleSave = (updated: Task) => {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    setSelectedTask(updated);
+    // Do NOT call setSelectedTask here — changing the task prop triggers TaskDrawer's
+    // useEffect([task]) which resets notesData, wiping notes the user just saved.
     api(`/api/tasks/${updated.id}`, 'PUT', updated);
   };
   const handleAdd = (partial: Partial<Task>) => {

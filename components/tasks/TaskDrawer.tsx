@@ -10,19 +10,25 @@ import { X, Trash2, Plus, Check, ChevronDown, Save } from 'lucide-react';
 interface Step { id: string; text: string; done: boolean }
 interface NotesData { notes: string; steps: Step[] }
 
-function parseNotes(raw: string | undefined): NotesData {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseNotes(raw: string | Record<string, any> | undefined | null): NotesData {
   if (!raw) return { notes: '', steps: [] };
+  // Supabase jsonb columns return objects directly
+  if (typeof raw === 'object') {
+    if ('__v2' in raw) return { notes: raw.notes ?? '', steps: raw.steps ?? [] };
+    return { notes: '', steps: [] };
+  }
   try {
     const p = JSON.parse(raw);
     if (p && typeof p === 'object' && '__v2' in p)
       return { notes: p.notes ?? '', steps: p.steps ?? [] };
-  } catch { /* plain text */ }
+  } catch { /* plain text — legacy data */ }
   return { notes: raw, steps: [] };
 }
 
 function serializeNotes(d: NotesData): string | undefined {
   if (!d.notes.trim() && d.steps.length === 0) return undefined;
-  if (d.steps.length === 0) return d.notes || undefined;
+  // Always use JSON format so storage works with both TEXT and JSONB columns
   return JSON.stringify({ __v2: true, notes: d.notes, steps: d.steps });
 }
 
