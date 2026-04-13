@@ -50,7 +50,14 @@ function taskToRow(t: Partial<Task>): Record<string, unknown> {
   if ('reminderAt'  in t)          r.reminder_at      = t.reminderAt ?? null;
   if (t.isWeekFocus  !== undefined) r.is_week_focus   = t.isWeekFocus;
   if (t.isMonthFocus !== undefined) r.is_month_focus  = t.isMonthFocus;
-  if ('notes'       in t)          r.notes            = t.notes ?? null;
+  if ('notes'       in t) {
+    const n = t.notes;
+    if (typeof n === 'string' && n) {
+      try { r.notes = JSON.parse(n); } catch { r.notes = n; }
+    } else {
+      r.notes = n ?? null;
+    }
+  }
   if ('tags'        in t)          r.tags             = t.tags ?? null;
   if (t.durationMinutes !== undefined) r.duration_minutes = t.durationMinutes;
   if (t.recurrence  !== undefined) r.recurrence       = t.recurrence;

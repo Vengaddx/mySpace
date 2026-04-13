@@ -207,7 +207,14 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
 
   const handleSave = () => {
     if (!form) return;
-    onSave?.({ ...form, notes: serializeNotes(notesData) });
+    let dataToSave = notesData;
+    if (newStepText.trim()) {
+      const pending: Step = { id: crypto.randomUUID(), text: newStepText.trim(), done: false };
+      dataToSave = { ...notesData, steps: [...notesData.steps, pending] };
+      setNotesData(dataToSave);
+      setNewStepText('');
+    }
+    onSave?.({ ...form, notes: serializeNotes(dataToSave) });
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   };
