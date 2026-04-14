@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Task, Project, Priority, Status, Workstream } from '@/types';
-import { cn, isOverdue } from '@/lib/utils';
+import { cn, isOverdue, sortTasksLogically } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { TaskDrawer } from '@/components/tasks/TaskDrawer';
 import { QuickAddTask } from '@/components/tasks/QuickAddTask';
@@ -83,15 +83,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   }, [workstreamTasks, selectedProjectId, filterPriority, filterStatus, search]);
 
   // Sorted for list view
-  const tableTasks = useMemo(() => {
-    return [...filteredTasks].sort((a, b) => {
-      if (a.priority === 'critical' && b.priority !== 'critical') return -1;
-      if (b.priority === 'critical' && a.priority !== 'critical') return 1;
-      if (isOverdue(a.dueDate, a.status, a.isUnscheduled) && !isOverdue(b.dueDate, b.status, b.isUnscheduled)) return -1;
-      if (isOverdue(b.dueDate, b.status, b.isUnscheduled) && !isOverdue(a.dueDate, a.status, a.isUnscheduled)) return 1;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    });
-  }, [filteredTasks]);
+  const tableTasks = useMemo(() => sortTasksLogically(filteredTasks), [filteredTasks]);
 
   const openCount = tasks.filter((t) => t.status !== 'done').length;
   const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.status, t.isUnscheduled)).length;

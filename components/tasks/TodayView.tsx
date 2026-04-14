@@ -2,7 +2,7 @@
 
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { Task, Project } from '@/types';
-import { cn, isOverdue } from '@/lib/utils';
+import { cn, isOverdue, sortTasksLogically } from '@/lib/utils';
 import { LayoutList, ChevronDown, Circle, PlayCircle, Bell, Mail, CheckCircle2 } from 'lucide-react';
 
 // ── Status icon ───────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ const MIN_DRAG_PX = 6; // pixels of movement before drag starts (vs click)
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
 const WORKSTREAM_ACCENT: Record<string, string> = {
-  personal: '#FF9900',
+  personal: '#F2296B',
   aramco:   '#AEDD00',
   satorp:   '#00C1FF',
   pmo:      '#a1a1aa',
@@ -328,12 +328,12 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
     return projects.filter(p => ids.has(p.id));
   }, [unscheduledTasks, projects]);
 
-  const filteredPool = useMemo(() =>
-    poolProjectIds.length > 0
+  const filteredPool = useMemo(() => {
+    const pool = poolProjectIds.length > 0
       ? unscheduledTasks.filter(t => t.projectId != null && poolProjectIds.includes(t.projectId))
-      : unscheduledTasks,
-    [unscheduledTasks, poolProjectIds],
-  );
+      : unscheduledTasks;
+    return sortTasksLogically(pool);
+  }, [unscheduledTasks, poolProjectIds]);
 
   const totalOpen  = scheduledTasks.length + unscheduledTasks.length;
   const isDragging = !!dragTask;

@@ -207,7 +207,7 @@ export function MonthCalendarView({ tasks, projects = [], onEditTask, onMonthCha
 }
 
 const WORKSTREAM_ACCENT: Record<string, string> = {
-  personal: '#FF9900',
+  personal: '#F2296B',
   aramco:   '#AEDD00',
   satorp:   '#00C1FF',
   pmo:      '#a1a1aa',
