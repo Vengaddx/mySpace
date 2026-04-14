@@ -64,6 +64,12 @@ export function TaskTable({
   };
 
   const sorted = [...tasks].sort((a, b) => {
+    // Done always sinks to the bottom (unless user explicitly sorted by status)
+    if (sortKey !== 'status') {
+      const aDone = a.status === 'done' ? 1 : 0;
+      const bDone = b.status === 'done' ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+    }
     let cmp = 0;
     if (sortKey === 'dueDate') {
       cmp = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();

@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Priority, Status, Workstream } from '@/types';
+import { Priority, Status, Task, Workstream } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -68,6 +68,23 @@ export function getCurrentWeekRange(): string {
 
 export function getCurrentMonthYear(): string {
   return new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+const PRIORITY_RANK: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+/**
+ * Logical task sort: critical first → high → medium → low → done last.
+ * Secondary sort: dueDate ascending within each group.
+ */
+export function sortTasksLogically(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => {
+    const aDone = a.status === 'done' ? 1 : 0;
+    const bDone = b.status === 'done' ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    const pCmp = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+    if (pCmp !== 0) return pCmp;
+    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+  });
 }
 
 export function getGreeting(): string {

@@ -10,7 +10,7 @@ const WORKSTREAM_META: Record<Workstream, { label: string; color: string }> = {
   aramco:   { label: 'Aramco',   color: '#F2296B' },
   satorp:   { label: 'SATORP',   color: '#00C1FF' },
   pmo:      { label: 'PMO',      color: '#AEDD00' },
-  personal: { label: 'Personal', color: '#a1a1aa' },
+  personal: { label: 'Personal', color: '#F2296B' },
 };
 
 const WORKSTREAMS = Object.keys(WORKSTREAM_META) as Workstream[];

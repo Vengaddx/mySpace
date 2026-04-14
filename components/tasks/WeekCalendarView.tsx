@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Task, Project, RecurrenceType } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, sortTasksLogically } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, RefreshCw, LayoutList, GripVertical, Circle, PlayCircle, Bell, Mail, CheckCircle2 } from 'lucide-react';
 
 function StatusIcon({ status }: { status: Task['status'] }) {
@@ -80,7 +80,7 @@ function makeInstance(task: Task, day: Date): Task {
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 const WORKSTREAM_ACCENT: Record<string, string> = {
-  personal: '#FF9900',
+  personal: '#F2296B',
   aramco:   '#AEDD00',
   satorp:   '#00C1FF',
   pmo:      '#a1a1aa',
@@ -240,12 +240,12 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
     return projects.filter(p => ids.has(p.id));
   }, [unscheduledTasks, projects]);
 
-  const filteredUnscheduled = useMemo(() =>
-    panelProjectIds.length > 0
+  const filteredUnscheduled = useMemo(() => {
+    const pool = panelProjectIds.length > 0
       ? unscheduledTasks.filter(t => t.projectId != null && panelProjectIds.includes(t.projectId))
-      : unscheduledTasks,
-    [unscheduledTasks, panelProjectIds],
-  );
+      : unscheduledTasks;
+    return sortTasksLogically(pool);
+  }, [unscheduledTasks, panelProjectIds]);
 
   // ── Global pointer handlers ───────────────────────────────────────────────
   useEffect(() => {
