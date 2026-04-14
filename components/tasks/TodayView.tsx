@@ -3,7 +3,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { Task, Project } from '@/types';
 import { cn, isOverdue, sortTasksLogically } from '@/lib/utils';
-import { LayoutList, ChevronDown, Circle, PlayCircle, Bell, Mail, CheckCircle2 } from 'lucide-react';
+import { LayoutList, Circle, PlayCircle, Bell, Mail, CheckCircle2 } from 'lucide-react';
 
 // ── Status icon ───────────────────────────────────────────────────────────────
 function StatusIcon({ status }: { status: Task['status'] }) {
@@ -151,7 +151,6 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
 
   // ── Other UI ──────────────────────────────────────────────────────────────────
   const [poolProjectIds, setPoolProjectIds] = useState<string[]>([]);
-  const [overdueOpen,   setOverdueOpen]   = useState(false);
 
   // Scroll to current time on mount
   useEffect(() => {
@@ -317,25 +316,28 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   const dateStr    = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
   const projectMap = useMemo(() => new Map(projects.map(p => [p.id, p])), [projects]);
 
-  const overdueTasks     = useMemo(() => tasks.filter(t => isOverdue(t.dueDate, t.status, t.isUnscheduled)), [tasks]);
   const todayOpen        = useMemo(() => tasks.filter(t => isTodayDate(t.dueDate) || (t.status === 'done' && isTodayDate(t.updatedAt))), [tasks]);
   const scheduledTasks   = useMemo(() => todayOpen.filter(t => !t.isUnscheduled && hasTime(t.dueDate)), [todayOpen]);
   const unscheduledTasks = useMemo(() => todayOpen.filter(t => t.isUnscheduled || !hasTime(t.dueDate)), [todayOpen]);
+  const overdueTasks     = useMemo(() => tasks.filter(t => isOverdue(t.dueDate, t.status, t.isUnscheduled)), [tasks]);
   const layout           = useMemo(() => computeColumns(scheduledTasks), [scheduledTasks]);
 
+  // Pool = overdue tasks + today's unscheduled (overdue tasks have a time so no overlap)
+  const allPoolTasks = useMemo(() => [...overdueTasks, ...unscheduledTasks], [overdueTasks, unscheduledTasks]);
+
   const poolProjects = useMemo(() => {
-    const ids = new Set(unscheduledTasks.map(t => t.projectId).filter(Boolean) as string[]);
+    const ids = new Set(allPoolTasks.map(t => t.projectId).filter(Boolean) as string[]);
     return projects.filter(p => ids.has(p.id));
-  }, [unscheduledTasks, projects]);
+  }, [allPoolTasks, projects]);
 
   const filteredPool = useMemo(() => {
     const pool = poolProjectIds.length > 0
-      ? unscheduledTasks.filter(t => t.projectId != null && poolProjectIds.includes(t.projectId))
-      : unscheduledTasks;
+      ? allPoolTasks.filter(t => t.projectId != null && poolProjectIds.includes(t.projectId))
+      : allPoolTasks;
     return sortTasksLogically(pool);
-  }, [unscheduledTasks, poolProjectIds]);
+  }, [allPoolTasks, poolProjectIds]);
 
-  const totalOpen  = scheduledTasks.length + unscheduledTasks.length;
+  const totalOpen  = scheduledTasks.length + allPoolTasks.length;
   const isDragging = !!dragTask;
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -370,34 +372,6 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
           <span className="text-[11px] text-zinc-400 dark:text-zinc-500">{totalOpen} today</span>
         )}
       </div>
-
-      {/* ── Overdue bar ──────────────────────────────────────────────────────── */}
-      {overdueTasks.length > 0 && (
-        <div className="mb-3 rounded-xl overflow-hidden border border-accent-orange/20 bg-accent-orange/5 dark:bg-accent-orange/[0.06]">
-          <button
-            onClick={() => setOverdueOpen(o => !o)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent-orange/5 transition-colors"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-accent-orange shrink-0" />
-            <span className="text-[11px] font-semibold text-accent-orange">
-              {overdueTasks.length} overdue
-            </span>
-            {!overdueOpen && (
-              <span className="text-[10px] text-accent-orange/60 truncate flex-1 text-left">
-                — {overdueTasks.slice(0, 2).map(t => t.title).join(', ')}{overdueTasks.length > 2 ? ` +${overdueTasks.length - 2}` : ''}
-              </span>
-            )}
-            <ChevronDown size={12} className={cn('ml-auto shrink-0 text-accent-orange/60 transition-transform duration-200', overdueOpen && 'rotate-180')} />
-          </button>
-          {overdueOpen && (
-            <div className="border-t border-accent-orange/10 divide-y divide-accent-orange/10">
-              {overdueTasks.map(task => (
-                <OverdueRow key={task.id} task={task} projectMap={projectMap} onEdit={onEditTask} onDone={id => onUpdateTask(id, { status: 'done' })} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── Main area ────────────────────────────────────────────────────────── */}
       <div className="flex gap-3 items-start">
@@ -662,12 +636,18 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
               </div>
             ) : (
               filteredPool.map(task => {
-                const proj   = projectMap.get(task.projectId ?? '');
-                const accent = WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa';
+                const proj    = projectMap.get(task.projectId ?? '');
+                const accent  = WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa';
+                const overdue = isOverdue(task.dueDate, task.status, task.isUnscheduled);
                 return (
                   <div
                     key={task.id}
-                    className="w-full group relative flex items-stretch gap-0 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700 text-left transition-all duration-150 hover:shadow-sm overflow-hidden cursor-grab active:cursor-grabbing select-none"
+                    className={cn(
+                      'w-full group relative flex items-stretch gap-0 rounded-xl border text-left transition-all duration-150 hover:shadow-sm overflow-hidden cursor-grab active:cursor-grabbing select-none',
+                      overdue
+                        ? 'bg-accent-orange/5 dark:bg-accent-orange/[0.06] border-accent-orange/20 hover:border-accent-orange/40'
+                        : 'bg-zinc-50 dark:bg-zinc-900/60 border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700'
+                    )}
                     style={{ touchAction: 'none' }}
                     onPointerDown={(e) => {
                       if (e.button !== 0) return;
@@ -683,19 +663,24 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                       setDragTask(task);
                     }}
                   >
-                    <div className="w-[3px] shrink-0" style={{ backgroundColor: accent }} />
+                    <div className="w-[3px] shrink-0" style={{ backgroundColor: overdue ? '#FF9900' : accent }} />
                     <div className="flex-1 min-w-0 px-2.5 py-2">
                       <div className="flex items-start justify-between gap-1">
-                        <p className={cn('text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 leading-snug line-clamp-2', task.status === 'done' && 'line-through opacity-50')}>
+                        <p className={cn('text-[11px] font-semibold leading-snug line-clamp-2', task.status === 'done' ? 'line-through opacity-50 text-zinc-800 dark:text-zinc-200' : overdue ? 'text-zinc-800 dark:text-zinc-200' : 'text-zinc-800 dark:text-zinc-200')}>
                           {task.title}
                         </p>
                         <StatusIcon status={task.status} />
                       </div>
-                      {proj ? (
-                        <p className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 mt-1 truncate">{proj.name}</p>
-                      ) : (
-                        <p className="text-[9px] font-medium text-zinc-300 dark:text-zinc-600 mt-1 capitalize">{task.workstream}</p>
-                      )}
+                      <div className="flex items-center gap-1.5 mt-1">
+                        {proj ? (
+                          <p className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 truncate">{proj.name}</p>
+                        ) : (
+                          <p className="text-[9px] font-medium text-zinc-300 dark:text-zinc-600 capitalize">{task.workstream}</p>
+                        )}
+                        {overdue && (
+                          <span className="text-[9px] font-bold text-accent-orange shrink-0">· overdue</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -718,32 +703,3 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
   );
 }
 
-// ── Overdue row ───────────────────────────────────────────────────────────────
-function OverdueRow({ task, projectMap, onEdit, onDone }: {
-  task: Task;
-  projectMap: Map<string, Project>;
-  onEdit: (t: Task) => void;
-  onDone: (id: string) => void;
-}) {
-  const project = task.projectId ? projectMap.get(task.projectId) : undefined;
-  const dueDate = new Date(task.dueDate);
-  const daysAgo = Math.floor((Date.now() - dueDate.getTime()) / 86_400_000);
-  const accent  = WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa';
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5">
-      <button
-        onClick={() => onDone(task.id)}
-        className="shrink-0 w-[18px] h-[18px] rounded-full border-2 border-accent-orange/40 hover:border-accent-orange hover:bg-accent-orange/10 transition-colors flex items-center justify-center"
-      />
-      <div className="w-1 h-4 rounded-full shrink-0" style={{ backgroundColor: accent }} />
-      <button onClick={() => onEdit(task)} className="flex-1 min-w-0 text-left">
-        <p className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{task.title}</p>
-        {project && <p className="text-[11px] text-zinc-400 dark:text-zinc-500">{project.name}</p>}
-      </button>
-      <span className="text-[11px] text-accent-orange/80 shrink-0">
-        {daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`}
-      </span>
-    </div>
-  );
-}
