@@ -10,6 +10,7 @@ import { WorkstreamTabs } from '@/components/tasks/WorkstreamTabs';
 import { TaskTable } from '@/components/tasks/TaskTable';
 import { ProjectSideNav } from '@/components/tasks/ProjectSideNav';
 import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher';
+import { MailView } from '@/components/tasks/MailView';
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TodayView } from '@/components/tasks/TodayView';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
@@ -87,6 +88,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
   const openCount = tasks.filter((t) => t.status !== 'done').length;
   const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.status, t.isUnscheduled)).length;
+  const mailCount = filteredTasks.filter((t) => t.status === 'send_mail').length;
   const activeFilterCount = (filterPriority !== 'all' ? 1 : 0) + (filterStatus !== 'all' ? 1 : 0);
   const hasActiveFilters = activeFilterCount > 0;
 
@@ -280,7 +282,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
             {/* View switcher + search + filter */}
             <div className="flex items-center gap-2">
-              <TaskViewSwitcher view={taskView} onChange={setTaskView} />
+              <TaskViewSwitcher view={taskView} onChange={setTaskView} mailCount={mailCount} />
 
               <div className="relative">
                 <Search
@@ -433,6 +435,16 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
                 api(`/api/tasks/${id}`, 'PUT', updates);
               }}
+            />
+          )}
+
+          {taskView === 'mail' && (
+            <MailView
+              tasks={filteredTasks}
+              projects={projects}
+              onMarkSent={(id) => handleStatusChange(id, 'done')}
+              onEdit={openDrawer}
+              onAddMailTask={() => setQuickAddOpen(true)}
             />
           )}
 
