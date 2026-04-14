@@ -11,6 +11,7 @@ import { TaskTable } from '@/components/tasks/TaskTable';
 import { ProjectSideNav } from '@/components/tasks/ProjectSideNav';
 import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher';
 import { MailView } from '@/components/tasks/MailView';
+import { FollowUpView } from '@/components/tasks/FollowUpView';
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TodayView } from '@/components/tasks/TodayView';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
@@ -50,7 +51,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const [taskView, setTaskView] = useState<FocusView>('week');
+  const [taskView, setTaskView] = useState<FocusView>('tasks');
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -83,12 +84,16 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
     return result;
   }, [workstreamTasks, selectedProjectId, filterPriority, filterStatus, search]);
 
-  // Sorted for list view
-  const tableTasks = useMemo(() => sortTasksLogically(filteredTasks), [filteredTasks]);
+  // Active list — excludes mail and follow-up (they have dedicated tabs)
+  const tableTasks = useMemo(
+    () => sortTasksLogically(filteredTasks.filter((t) => t.status !== 'send_mail' && t.status !== 'follow_up')),
+    [filteredTasks]
+  );
 
   const openCount = tasks.filter((t) => t.status !== 'done').length;
   const overdueCount = tasks.filter((t) => isOverdue(t.dueDate, t.status, t.isUnscheduled)).length;
-  const mailCount = filteredTasks.filter((t) => t.status === 'send_mail').length;
+  const mailCount     = filteredTasks.filter((t) => t.status === 'send_mail').length;
+  const followUpCount = filteredTasks.filter((t) => t.status === 'follow_up').length;
   const activeFilterCount = (filterPriority !== 'all' ? 1 : 0) + (filterStatus !== 'all' ? 1 : 0);
   const hasActiveFilters = activeFilterCount > 0;
 
@@ -273,7 +278,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
               <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
                 {panelTitle}
               </h2>
-              {taskView === 'list' && panelCount > 0 && (
+              {taskView === 'tasks' && panelCount > 0 && (
                 <span className="text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
                   {panelCount} task{panelCount !== 1 ? 's' : ''}
                 </span>
@@ -282,7 +287,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
             {/* View switcher + search + filter */}
             <div className="flex items-center gap-2">
-              <TaskViewSwitcher view={taskView} onChange={setTaskView} mailCount={mailCount} />
+              <TaskViewSwitcher view={taskView} onChange={setTaskView} mailCount={mailCount} followUpCount={followUpCount} />
 
               <div className="relative">
                 <Search
@@ -387,8 +392,8 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
             </div>
           )}
 
-          {/* Main content area — switches between List / Week / Month */}
-          {taskView === 'list' && (
+          {/* Main content area */}
+          {taskView === 'tasks' && (
             tableTasks.length === 0 ? (
               <EmptyPanel
                 message={
@@ -435,6 +440,16 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
                 api(`/api/tasks/${id}`, 'PUT', updates);
               }}
+            />
+          )}
+
+          {taskView === 'follow_up' && (
+            <FollowUpView
+              tasks={filteredTasks}
+              projects={projects}
+              onMarkDone={(id) => handleStatusChange(id, 'done')}
+              onEdit={openDrawer}
+              onAddTask={() => setQuickAddOpen(true)}
             />
           )}
 
