@@ -420,14 +420,17 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
           {taskView === 'week' && (
             <WeekCalendarView
-              tasks={filteredTasks.filter((t) => !t.isUnscheduled && t.status !== 'send_mail' && t.status !== 'follow_up')}
+              tasks={filteredTasks.filter((t) => !t.isUnscheduled && t.status !== 'send_mail' && t.status !== 'follow_up' && !isOverdue(t.dueDate, t.status, t.isUnscheduled))}
               projects={projects}
               onEditTask={openDrawer}
               onUpdateTask={(id, updates) => {
                 setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
                 api(`/api/tasks/${id}`, 'PUT', updates);
               }}
-              unscheduledTasks={filteredTasks.filter(t => (t.isUnscheduled ?? false) && t.status !== 'done' && t.status !== 'send_mail' && t.status !== 'follow_up')}
+              unscheduledTasks={filteredTasks.filter(t =>
+                t.status !== 'done' && t.status !== 'send_mail' && t.status !== 'follow_up' &&
+                ((t.isUnscheduled ?? false) || isOverdue(t.dueDate, t.status, t.isUnscheduled))
+              )}
             />
           )}
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Task, Project, RecurrenceType } from '@/types';
-import { cn, sortTasksLogically } from '@/lib/utils';
+import { cn, sortTasksLogically, isOverdue } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, RefreshCw, LayoutList, GripVertical, Circle, PlayCircle, Bell, Mail, CheckCircle2 } from 'lucide-react';
 
 function StatusIcon({ status }: { status: Task['status'] }) {
@@ -850,11 +850,17 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
             </div>
           ) : (
             filteredUnscheduled.map(task => {
-              const proj = projectMap.get(task.projectId ?? '');
+              const proj    = projectMap.get(task.projectId ?? '');
+              const overdue = isOverdue(task.dueDate, task.status, task.isUnscheduled);
               return (
                 <div
                   key={task.id}
-                  className="group relative flex items-stretch gap-0 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700 cursor-grab active:cursor-grabbing transition-all duration-150 hover:shadow-sm overflow-hidden select-none"
+                  className={cn(
+                    'group relative flex items-stretch gap-0 rounded-xl cursor-grab active:cursor-grabbing transition-all duration-150 hover:shadow-sm overflow-hidden select-none border',
+                    overdue
+                      ? 'bg-accent-orange/5 dark:bg-accent-orange/[0.06] border-accent-orange/20 hover:border-accent-orange/40'
+                      : 'bg-zinc-50 dark:bg-zinc-900/60 border-zinc-100 dark:border-zinc-800/80 hover:border-zinc-200 dark:hover:border-zinc-700'
+                  )}
                   style={{ touchAction: 'none' }}
                   onPointerDown={(e) => {
                     if (e.button !== 0) return;
@@ -870,16 +876,19 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                     setDraggingTaskId(task.id);
                   }}
                 >
-                  <div className="w-[3px] shrink-0" style={{ backgroundColor: WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa' }} />
+                  <div className="w-[3px] shrink-0" style={{ backgroundColor: overdue ? '#FF9900' : WORKSTREAM_ACCENT[task.workstream] ?? '#a1a1aa' }} />
                   <div className="flex-1 min-w-0 px-2.5 py-2">
                     <div className="flex items-start justify-between gap-1">
                       <p className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 leading-snug line-clamp-2">{task.title}</p>
                       <StatusIcon status={task.status} />
                     </div>
-                    {proj
-                      ? <p className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 mt-1 truncate">{proj.name}</p>
-                      : <p className="text-[9px] font-medium text-zinc-300 dark:text-zinc-600 mt-1 capitalize">{task.workstream}</p>
-                    }
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {proj
+                        ? <p className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 truncate">{proj.name}</p>
+                        : <p className="text-[9px] font-medium text-zinc-300 dark:text-zinc-600 capitalize">{task.workstream}</p>
+                      }
+                      {overdue && <span className="text-[9px] font-bold text-accent-orange shrink-0">· overdue</span>}
+                    </div>
                   </div>
                   <div className="flex items-center pr-1.5 opacity-0 group-hover:opacity-40 transition-opacity">
                     <GripVertical size={11} className="text-zinc-400" />
