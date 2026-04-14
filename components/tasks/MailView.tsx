@@ -22,7 +22,7 @@ const WORKSTREAM_LABEL: Record<Workstream, string> = {
 const WORKSTREAM_ACCENT: Record<Workstream, string> = {
   aramco:   '#AEDD00',
   satorp:   '#00C1FF',
-  pmo:      '#a1a1aa',
+  pmo:      '#FFB503',
   personal: '#F2296B',
 };
 

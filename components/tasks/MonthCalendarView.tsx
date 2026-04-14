@@ -210,7 +210,7 @@ const WORKSTREAM_ACCENT: Record<string, string> = {
   personal: '#F2296B',
   aramco:   '#AEDD00',
   satorp:   '#00C1FF',
-  pmo:      '#a1a1aa',
+  pmo:      '#FFB503',
 };
 
 function needsDarkText(hex: string): boolean {
