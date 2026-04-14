@@ -420,7 +420,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
           {taskView === 'week' && (
             <WeekCalendarView
-              tasks={filteredTasks.filter((t) => !t.isUnscheduled && t.status !== 'send_mail' && t.status !== 'follow_up' && !isOverdue(t.dueDate, t.status, t.isUnscheduled))}
+              tasks={filteredTasks.filter((t) => !t.isUnscheduled && t.status !== 'send_mail' && t.status !== 'follow_up')}
               projects={projects}
               onEditTask={openDrawer}
               onUpdateTask={(id, updates) => {
