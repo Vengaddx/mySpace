@@ -70,6 +70,12 @@ export function TaskTable({
       const bDone = b.status === 'done' ? 1 : 0;
       if (aDone !== bDone) return aDone - bDone;
     }
+    // Critical always floats to the top (unless user explicitly sorted by priority)
+    if (sortKey !== 'priority') {
+      const aCrit = a.priority === 'critical' && a.status !== 'done' ? 0 : 1;
+      const bCrit = b.priority === 'critical' && b.status !== 'done' ? 0 : 1;
+      if (aCrit !== bCrit) return aCrit - bCrit;
+    }
     let cmp = 0;
     if (sortKey === 'dueDate') {
       cmp = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
