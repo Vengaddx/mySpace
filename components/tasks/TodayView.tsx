@@ -104,19 +104,23 @@ interface TodayViewProps {
   projects: Project[];
   onEditTask: (task: Task) => void;
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
+  onCreateTask?: (isoDate: string) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayViewProps) {
+export function TodayView({ tasks, projects, onEditTask, onUpdateTask, onCreateTask }: TodayViewProps) {
   const scrollRef  = useRef<HTMLDivElement>(null);
   const poolRef    = useRef<HTMLDivElement>(null);
   const nowLineRef = useRef<HTMLDivElement>(null);
 
   // Stable callback refs — avoids stale closures in the global pointer effect
-  const onUpdateTaskRef = useRef(onUpdateTask);
-  const onEditTaskRef   = useRef(onEditTask);
+  const onUpdateTaskRef  = useRef(onUpdateTask);
+  const onEditTaskRef    = useRef(onEditTask);
+  const onCreateTaskRef  = useRef(onCreateTask);
+  const lastDragEndRef   = useRef(0);
   useEffect(() => { onUpdateTaskRef.current = onUpdateTask; }, [onUpdateTask]);
   useEffect(() => { onEditTaskRef.current   = onEditTask;   }, [onEditTask]);
+  useEffect(() => { onCreateTaskRef.current = onCreateTask; }, [onCreateTask]);
 
   // ── Drag (all mutable data in refs; only visual state in useState) ────────────
   type DragData = {
@@ -184,6 +188,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
       setDropPx(null);
       setDropLabel('');
       setOverPool(false);
+      lastDragEndRef.current = Date.now();
     };
 
     const onMove = (e: PointerEvent) => {
@@ -379,8 +384,24 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
         {/* ── Timeline ───────────────────────────────────────────────────────── */}
         <div
           ref={scrollRef}
-          className="flex-1 min-w-0 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-y-auto"
+          className={cn(
+            'flex-1 min-w-0 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 overflow-y-auto',
+            onCreateTask && !isDragging && 'cursor-crosshair',
+          )}
           style={{ maxHeight: 'calc(100vh - 260px)', minHeight: 320 }}
+          onClick={(e) => {
+            if (!onCreateTaskRef.current) return;
+            if (Date.now() - lastDragEndRef.current < 250) return;
+            const el = scrollRef.current;
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            const relY = e.clientY - rect.top + el.scrollTop;
+            const rawMin = (relY / HOUR_HEIGHT) * 60 + START_HOUR * 60;
+            const snapped = clampSnap(rawMin);
+            const date = new Date();
+            date.setHours(Math.floor(snapped / 60), snapped % 60, 0, 0);
+            onCreateTaskRef.current(date.toISOString());
+          }}
         >
           <div className="relative" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>
 
@@ -460,6 +481,7 @@ export function TodayView({ tasks, projects, onEditTask, onUpdateTask }: TodayVi
                     backgroundColor: accent,
                     touchAction: 'none',
                   }}
+                  onClick={(e) => e.stopPropagation()}
                   onPointerDown={(e) => {
                     if (e.button !== 0 || resizeRef.current) return;
                     const r       = scrollRef.current!.getBoundingClientRect();

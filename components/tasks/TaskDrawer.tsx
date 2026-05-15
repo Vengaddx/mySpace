@@ -170,6 +170,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
   const [newStepText, setNewStepText] = useState('');
   const [isMobile,    setIsMobile]    = useState(false);
   const [saved,       setSaved]       = useState(false);
+  const [isDirty,     setIsDirty]     = useState(false);
   const touchStartY = useRef<number | null>(null);
   const notesRef    = useRef<HTMLTextAreaElement>(null);
   const titleRef    = useRef<HTMLTextAreaElement>(null);
@@ -187,8 +188,17 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
       setForm({ ...task });
       setNotesData(parseNotes(task.notes));
       setNewStepText('');
+      setIsDirty(false);
     }
   }, [task]);
+
+  // Escape key to close
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
 
   // Auto-grow textareas
   useEffect(() => {
@@ -215,6 +225,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
       setNewStepText('');
     }
     onSave?.({ ...form, notes: serializeNotes(dataToSave) });
+    setIsDirty(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   };
@@ -300,11 +311,13 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                       'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
                       saved
                         ? 'bg-accent-green/20 text-zinc-700 dark:text-zinc-200 ring-1 ring-accent-green/50'
+                        : isDirty
+                        ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-100 ring-2 ring-offset-1 ring-zinc-400 dark:ring-zinc-500'
                         : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-100'
                     )}
                   >
                     {saved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-                    {saved ? 'Saved!' : 'Save'}
+                    {saved ? 'Saved!' : isDirty ? 'Save*' : 'Save'}
                   </button>
                   <button
                     onClick={onClose}
@@ -322,7 +335,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                 className="w-full text-[18px] font-bold text-zinc-900 dark:text-zinc-50 bg-transparent resize-none outline-none leading-snug placeholder:text-zinc-300 dark:placeholder:text-zinc-700 overflow-hidden"
                 value={form.title}
                 placeholder="Task title…"
-                onChange={e => setForm({ ...form, title: e.target.value })}
+                onChange={e => { setForm({ ...form, title: e.target.value }); setIsDirty(true); }}
               />
             </div>
 
@@ -336,7 +349,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     {STATUS_OPTIONS.map(opt => (
                       <button
                         key={opt.value}
-                        onClick={() => setForm({ ...form, status: opt.value })}
+                        onClick={() => { setForm({ ...form, status: opt.value }); setIsDirty(true); }}
                         className={cn(
                           'px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all',
                           form.status === opt.value ? opt.active : opt.inactive
@@ -354,7 +367,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     {PRIORITY_OPTIONS.map(opt => (
                       <button
                         key={opt.value}
-                        onClick={() => setForm({ ...form, priority: opt.value })}
+                        onClick={() => { setForm({ ...form, priority: opt.value }); setIsDirty(true); }}
                         className={cn(
                           'px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all',
                           form.priority === opt.value ? opt.active : opt.inactive
@@ -372,14 +385,14 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     <SelectInput
                       value={form.workstream}
                       options={WORKSTREAM_OPTIONS}
-                      onChange={v => setForm({ ...form, workstream: v as Workstream, projectId: undefined })}
+                      onChange={v => { setForm({ ...form, workstream: v as Workstream, projectId: undefined }); setIsDirty(true); }}
                     />
                   </Section>
                   <Section label="Project">
                     <SelectInput
                       value={form.projectId ?? ''}
                       options={[{ value: '', label: 'No project' }, ...workstreamProjects.map(p => ({ value: p.id, label: p.name }))]}
-                      onChange={v => setForm({ ...form, projectId: v || undefined })}
+                      onChange={v => { setForm({ ...form, projectId: v || undefined }); setIsDirty(true); }}
                     />
                   </Section>
                 </div>
@@ -390,7 +403,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     <input
                       type="date"
                       value={getLocalDateValue(form.dueDate)}
-                      onChange={e => setForm({ ...form, dueDate: applyDatePart(form.dueDate, e.target.value) })}
+                      onChange={e => { setForm({ ...form, dueDate: applyDatePart(form.dueDate, e.target.value) }); setIsDirty(true); }}
                       className="w-full text-[13px] text-zinc-800 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-900 rounded-lg px-2.5 py-2 border border-zinc-200 dark:border-zinc-800 outline-none hover:border-zinc-400 dark:hover:border-zinc-600 focus:border-zinc-500 dark:focus:border-zinc-500 transition-colors"
                     />
                   </Section>
@@ -398,7 +411,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     <input
                       type="date"
                       value={form.reminderAt?.split('T')[0] ?? ''}
-                      onChange={e => setForm({ ...form, reminderAt: e.target.value ? new Date(e.target.value).toISOString() : undefined })}
+                      onChange={e => { setForm({ ...form, reminderAt: e.target.value ? new Date(e.target.value).toISOString() : undefined }); setIsDirty(true); }}
                       className="w-full text-[13px] text-zinc-800 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-900 rounded-lg px-2.5 py-2 border border-zinc-200 dark:border-zinc-800 outline-none hover:border-zinc-400 dark:hover:border-zinc-600 focus:border-zinc-500 dark:focus:border-zinc-500 transition-colors"
                     />
                   </Section>
@@ -410,12 +423,12 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     <div className="flex items-center gap-1.5">
                       <TimeSelect
                         value={getLocalTimeValue(form.dueDate)}
-                        onChange={v => setForm({ ...form, dueDate: applyTimePart(form.dueDate, v) })}
+                        onChange={v => { setForm({ ...form, dueDate: applyTimePart(form.dueDate, v) }); setIsDirty(true); }}
                       />
                       <span className="text-[11px] text-zinc-400 shrink-0">–</span>
                       <TimeSelect
                         value={getEndTimeValue(form.dueDate, form.durationMinutes ?? 60)}
-                        onChange={v => setForm({ ...form, durationMinutes: durationFromEndTime(form.dueDate, v) })}
+                        onChange={v => { setForm({ ...form, durationMinutes: durationFromEndTime(form.dueDate, v) }); setIsDirty(true); }}
                       />
                     </div>
                   </Section>
@@ -423,7 +436,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     <SelectInput
                       value={form.recurrence ?? 'none'}
                       options={RECURRENCE_OPTIONS}
-                      onChange={v => setForm({ ...form, recurrence: v as RecurrenceType })}
+                      onChange={v => { setForm({ ...form, recurrence: v as RecurrenceType }); setIsDirty(true); }}
                     />
                   </Section>
                 </div>
@@ -439,7 +452,7 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                     className="w-full text-sm text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900 rounded-xl px-3 py-2.5 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 resize-none overflow-hidden transition-colors placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
                     placeholder="Add notes…"
                     value={notesData.notes}
-                    onChange={e => setNotesData(d => ({ ...d, notes: e.target.value }))}
+                    onChange={e => { setNotesData(d => ({ ...d, notes: e.target.value })); setIsDirty(true); }}
                   />
                 </Section>
 

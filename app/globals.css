@@ -63,6 +63,10 @@ html.dark body {
   scrollbar-color: #e4e4e7 transparent;
 }
 
+html.dark * {
+  scrollbar-color: #3f3f46 transparent;
+}
+
 *::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -75,6 +79,10 @@ html.dark body {
 *::-webkit-scrollbar-thumb {
   background-color: #e4e4e7;
   border-radius: 99px;
+}
+
+html.dark *::-webkit-scrollbar-thumb {
+  background-color: #3f3f46;
 }
 
 /* Hide scrollbar utility */

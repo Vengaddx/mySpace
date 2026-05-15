@@ -124,11 +124,12 @@ interface WeekCalendarViewProps {
   projects?: Project[];
   onEditTask: (task: Task) => void;
   onUpdateTask?: (id: string, updates: Partial<Task>) => void;
+  onCreateTask?: (isoDate: string) => void;
   unscheduledTasks?: Task[];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTask, unscheduledTasks = [] }: WeekCalendarViewProps) {
+export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTask, onCreateTask, unscheduledTasks = [] }: WeekCalendarViewProps) {
   const projectMap = useMemo(() => new Map(projects.map(p => [p.id, p])), [projects]);
   const todayDate  = useMemo(() => new Date(), []);
 
@@ -161,9 +162,13 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
   // ── Stable callback refs ──────────────────────────────────────────────────
   const onUpdateTaskRef  = useRef(onUpdateTask);
   const onEditTaskRef    = useRef(onEditTask);
+  const onCreateTaskRef  = useRef(onCreateTask);
   const allTasksRef      = useRef([...tasks, ...unscheduledTasks]);
+  // Tracks when last drag ended — suppresses spurious column clicks after drag
+  const lastDragEndRef   = useRef(0);
   useEffect(() => { onUpdateTaskRef.current = onUpdateTask; },                 [onUpdateTask]);
   useEffect(() => { onEditTaskRef.current   = onEditTask; },                   [onEditTask]);
+  useEffect(() => { onCreateTaskRef.current = onCreateTask; },                 [onCreateTask]);
   useEffect(() => { allTasksRef.current     = [...tasks, ...unscheduledTasks]; }, [tasks, unscheduledTasks]);
 
   // ── Drag data ref ─────────────────────────────────────────────────────────
@@ -258,6 +263,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
       setPrevHov(false);
       setNextHov(false);
       setInboxHov(false);
+      lastDragEndRef.current = Date.now();
     };
 
     // Compute which day column and position the pointer is over
@@ -627,7 +633,25 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                         isWeekend && !isToday && 'bg-zinc-50 dark:bg-zinc-900/50',
                         isToday && 'bg-blue-50/40 dark:bg-zinc-900/20',
                         isDropDay && isDragging && 'bg-accent-cyan/8 dark:bg-accent-cyan/5',
+                        !isDragging && onCreateTask && 'cursor-crosshair',
                       )}
+                      onClick={(e) => {
+                        // Suppress if a drag just ended or no create handler
+                        if (!onCreateTaskRef.current) return;
+                        if (Date.now() - lastDragEndRef.current < 250) return;
+                        const colEl = dayColumnRefs.current[dayIdx];
+                        if (!colEl) return;
+                        const rect = colEl.getBoundingClientRect();
+                        const relY = e.clientY - rect.top;
+                        if (relY < 0) return;
+                        const rawMin = (relY / HOUR_HEIGHT) * 60 + START_HOUR * 60;
+                        const snapped = clampSnap(rawMin);
+                        const day = daysRef.current[dayIdx];
+                        if (!day) return;
+                        const date = new Date(day);
+                        date.setHours(Math.floor(snapped / 60), snapped % 60, 0, 0);
+                        onCreateTaskRef.current(date.toISOString());
+                      }}
                     >
                       {/* Now line */}
                       {isToday && nowPx >= 0 && nowPx <= TOTAL_HEIGHT && (
@@ -689,6 +713,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
                               boxShadow: isDone ? 'none' : `0 1px 3px ${accent}55`,
                               touchAction: 'none',
                             }}
+                            onClick={(e) => e.stopPropagation()}
                             onPointerDown={(e) => {
                               if (e.button !== 0 || resizeRef.current) return;
                               const colEl = dayColumnRefs.current[dayIdx];
