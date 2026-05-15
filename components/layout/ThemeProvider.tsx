@@ -29,14 +29,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('theme', next);
   };
 
-  // Prevent flash: hide until mounted
+  // Prevent flash: render invisible until theme is resolved, then fade in
   if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
+    return <div style={{ opacity: 0 }}>{children}</div>;
   }
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
-      {children}
+      <div style={{ opacity: 1, transition: 'opacity 0.15s ease' }}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }

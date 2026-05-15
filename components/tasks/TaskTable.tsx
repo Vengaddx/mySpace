@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Task } from '@/types';
 import { cn, formatDateShort, isOverdue, isToday } from '@/lib/utils';
 import {
@@ -63,7 +63,7 @@ export function TaskTable({
     else { setSortKey(key); setSortDir('asc'); }
   };
 
-  const sorted = [...tasks].sort((a, b) => {
+  const sorted = useMemo(() => [...tasks].sort((a, b) => {
     // Done always sinks to the bottom (unless user explicitly sorted by status)
     if (sortKey !== 'status') {
       const aDone = a.status === 'done' ? 1 : 0;
@@ -87,7 +87,7 @@ export function TaskTable({
       cmp = a.title.localeCompare(b.title);
     }
     return sortDir === 'asc' ? cmp : -cmp;
-  });
+  }), [tasks, sortKey, sortDir]);
 
   if (sorted.length === 0) return null;
 
@@ -384,9 +384,14 @@ function RowMenu({
   onClose: () => void;
 }) {
   React.useEffect(() => {
-    const handler = () => onClose();
-    document.addEventListener('click', handler, true);
-    return () => document.removeEventListener('click', handler, true);
+    const clickHandler = () => onClose();
+    const keyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('click', clickHandler, true);
+    document.addEventListener('keydown', keyHandler);
+    return () => {
+      document.removeEventListener('click', clickHandler, true);
+      document.removeEventListener('keydown', keyHandler);
+    };
   }, [onClose]);
 
   return (
