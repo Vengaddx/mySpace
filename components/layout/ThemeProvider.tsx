@@ -31,12 +31,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Prevent flash: render invisible until theme is resolved, then fade in
   if (!mounted) {
-    return <div style={{ opacity: 0 }}>{children}</div>;
+    return <div style={{ opacity: 0 }} className="h-full">{children}</div>;
   }
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
-      <div style={{ opacity: 1, transition: 'opacity 0.15s ease' }}>
+      <div style={{ opacity: 1, transition: 'opacity 0.15s ease' }} className="h-full">
         {children}
       </div>
     </ThemeContext.Provider>
