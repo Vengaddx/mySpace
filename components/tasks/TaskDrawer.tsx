@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Task, Priority, Status, Workstream, Project, RecurrenceType } from '@/types';
+import { Task, Priority, Status, Workstream, Project } from '@/types';
 import { cn } from '@/lib/utils';
 import { X, Trash2, Plus, Check, ChevronDown, Save } from 'lucide-react';
 
@@ -129,8 +129,6 @@ const STATUS_OPTIONS: { value: Status; label: string; active: string; inactive: 
   { value: 'todo',        label: 'To Do',       active: 'bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900',        inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
   { value: 'in_progress', label: 'In Progress',  active: 'bg-accent-cyan/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-cyan/60', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
   { value: 'done',        label: 'Done',         active: 'bg-accent-green/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-green/50', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
-  { value: 'follow_up',   label: 'Follow Up',    active: 'bg-accent-orange/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-orange/50', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
-  { value: 'send_mail',   label: 'Send Mail',    active: 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 ring-1 ring-violet-300/60 dark:ring-violet-500/40', inactive: 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
 ];
 
 const PRIORITY_OPTIONS: { value: Priority; label: string; active: string; inactive: string }[] = [
@@ -138,13 +136,6 @@ const PRIORITY_OPTIONS: { value: Priority; label: string; active: string; inacti
   { value: 'medium',   label: 'Medium',   active: 'bg-accent-cyan/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-cyan/60',  inactive: 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
   { value: 'high',     label: 'High',     active: 'bg-accent-green/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-green/50', inactive: 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
   { value: 'critical', label: 'Critical', active: 'bg-accent-orange/20 text-zinc-900 dark:text-zinc-100 ring-1 ring-accent-orange/50', inactive: 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800' },
-];
-
-const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
-  { value: 'none',     label: 'Does not repeat' },
-  { value: 'daily',    label: 'Every day' },
-  { value: 'weekdays', label: 'Weekdays (Mon–Fri)' },
-  { value: 'weekly',   label: 'Every week' },
 ];
 
 const WORKSTREAM_OPTIONS: { value: Workstream; label: string }[] = [
@@ -397,49 +388,30 @@ export function TaskDrawer({ task, open, onClose, onSave, onDelete, projects = [
                   </Section>
                 </div>
 
-                {/* Date + Reminder */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Section label="Date">
-                    <input
-                      type="date"
-                      value={getLocalDateValue(form.dueDate)}
-                      onChange={e => { setForm({ ...form, dueDate: applyDatePart(form.dueDate, e.target.value) }); setIsDirty(true); }}
-                      className="w-full text-[13px] text-zinc-800 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-900 rounded-lg px-2.5 py-2 border border-zinc-200 dark:border-zinc-800 outline-none hover:border-zinc-400 dark:hover:border-zinc-600 focus:border-zinc-500 dark:focus:border-zinc-500 transition-colors"
-                    />
-                  </Section>
-                  <Section label="Reminder">
-                    <input
-                      type="date"
-                      value={form.reminderAt?.split('T')[0] ?? ''}
-                      onChange={e => { setForm({ ...form, reminderAt: e.target.value ? new Date(e.target.value).toISOString() : undefined }); setIsDirty(true); }}
-                      className="w-full text-[13px] text-zinc-800 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-900 rounded-lg px-2.5 py-2 border border-zinc-200 dark:border-zinc-800 outline-none hover:border-zinc-400 dark:hover:border-zinc-600 focus:border-zinc-500 dark:focus:border-zinc-500 transition-colors"
-                    />
-                  </Section>
-                </div>
+                {/* Date */}
+                <Section label="Date">
+                  <input
+                    type="date"
+                    value={getLocalDateValue(form.dueDate)}
+                    onChange={e => { setForm({ ...form, dueDate: applyDatePart(form.dueDate, e.target.value) }); setIsDirty(true); }}
+                    className="w-full text-[13px] text-zinc-800 dark:text-zinc-200 bg-zinc-50 dark:bg-zinc-900 rounded-lg px-2.5 py-2 border border-zinc-200 dark:border-zinc-800 outline-none hover:border-zinc-400 dark:hover:border-zinc-600 focus:border-zinc-500 dark:focus:border-zinc-500 transition-colors"
+                  />
+                </Section>
 
-                {/* Time + Recurrence */}
-                <div className="grid grid-cols-2 gap-4">
-                  <Section label="Time">
-                    <div className="flex items-center gap-1.5">
-                      <TimeSelect
-                        value={getLocalTimeValue(form.dueDate)}
-                        onChange={v => { setForm({ ...form, dueDate: applyTimePart(form.dueDate, v) }); setIsDirty(true); }}
-                      />
-                      <span className="text-[11px] text-zinc-400 shrink-0">–</span>
-                      <TimeSelect
-                        value={getEndTimeValue(form.dueDate, form.durationMinutes ?? 60)}
-                        onChange={v => { setForm({ ...form, durationMinutes: durationFromEndTime(form.dueDate, v) }); setIsDirty(true); }}
-                      />
-                    </div>
-                  </Section>
-                  <Section label="Recurrence">
-                    <SelectInput
-                      value={form.recurrence ?? 'none'}
-                      options={RECURRENCE_OPTIONS}
-                      onChange={v => { setForm({ ...form, recurrence: v as RecurrenceType }); setIsDirty(true); }}
+                {/* Time */}
+                <Section label="Time">
+                  <div className="flex items-center gap-1.5">
+                    <TimeSelect
+                      value={getLocalTimeValue(form.dueDate)}
+                      onChange={v => { setForm({ ...form, dueDate: applyTimePart(form.dueDate, v) }); setIsDirty(true); }}
                     />
-                  </Section>
-                </div>
+                    <span className="text-[11px] text-zinc-400 shrink-0">–</span>
+                    <TimeSelect
+                      value={getEndTimeValue(form.dueDate, form.durationMinutes ?? 60)}
+                      onChange={v => { setForm({ ...form, durationMinutes: durationFromEndTime(form.dueDate, v) }); setIsDirty(true); }}
+                    />
+                  </div>
+                </Section>
 
                 {/* Divider */}
                 <div className="h-px bg-zinc-100 dark:bg-zinc-800/80" />
