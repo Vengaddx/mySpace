@@ -12,6 +12,7 @@ import { ProjectSideNav } from '@/components/tasks/ProjectSideNav';
 import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher';
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TodayView } from '@/components/tasks/TodayView';
+import { TaskMonthView } from '@/components/tasks/TaskMonthView';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 
@@ -326,68 +327,63 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
         {/* RIGHT: Task panel */}
         <div className="flex-1 min-w-0">
-          {/* Panel header */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+          {/* Panel header — row 1: title + view switcher */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 min-w-0">
               <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
                 {panelTitle}
               </h2>
               {taskView === 'tasks' && panelCount > 0 && (
-                <span className="text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">
-                  {panelCount}
-                </span>
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-500 shrink-0">{panelCount}</span>
               )}
             </div>
-
-            {/* View switcher + search + filter */}
-            <div className="flex items-center gap-2">
-              <TaskViewSwitcher view={taskView} onChange={setTaskView} />
-
-              {taskView === 'tasks' && (
-                <>
-                  <div className="relative">
-                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
-                    <input
-                      type="text"
-                      placeholder="Search…"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors pl-8 pr-6 py-2 rounded-xl w-36 sm:w-44"
-                    />
-                    {search && (
-                      <button
-                        onClick={() => setSearch('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                      >
-                        <X size={11} />
-                      </button>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setFiltersOpen(!filtersOpen)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border transition-colors shrink-0',
-                      hasActiveFilters
-                        ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white'
-                        : 'bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
-                    )}
-                  >
-                    <SlidersHorizontal size={12} />
-                    <span className="hidden sm:inline">Filter</span>
-                    {activeFilterCount > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
+            <TaskViewSwitcher view={taskView} onChange={setTaskView} />
           </div>
+
+          {/* Panel header — row 2: search + filter (list view only) */}
+          {taskView === 'tasks' && (
+            <div className="flex items-center gap-2 mb-4">
+              <div className="relative flex-1 sm:flex-none">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Search…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full sm:w-44 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors pl-8 pr-6 py-2 rounded-xl"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border transition-colors shrink-0',
+                  hasActiveFilters
+                    ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white'
+                    : 'bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
+                )}
+              >
+                <SlidersHorizontal size={12} />
+                <span className="hidden sm:inline">Filter</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Filter panel */}
           {taskView === 'tasks' && filtersOpen && (
-            <div className="bg-white dark:bg-zinc-900/80 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 mb-4 grid grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-zinc-900/80 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-4 mb-4 grid grid-cols-2 gap-3 sm:gap-4">
               <FilterSelect
                 label="Priority"
                 value={filterPriority}
@@ -500,6 +496,14 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 api(`/api/tasks/${id}`, 'PUT', updates);
               }}
               onCreateTask={handleCreateFromTimeline}
+            />
+          )}
+
+          {taskView === 'month' && (
+            <TaskMonthView
+              tasks={filteredTasks}
+              today={new Date().toISOString().slice(0, 10)}
+              onTaskEdit={openDrawer}
             />
           )}
         </div>

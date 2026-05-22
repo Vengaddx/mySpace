@@ -515,7 +515,7 @@ export function WeekCalendarView({ tasks, projects = [], onEditTask, onUpdateTas
             <ChevronLeft size={14} />
           </button>
 
-          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 min-w-[120px] text-center select-none">
+          <span className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 min-w-[90px] sm:min-w-[120px] text-center select-none">
             {isMobile
               ? days[1].toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: days[1].getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })
               : formatRange(days[0], days[days.length - 1])}

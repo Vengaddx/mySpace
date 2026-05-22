@@ -98,23 +98,23 @@ export function TravelClient({ initialTrips }: TravelClientProps) {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-10">
 
         {/* ── Header ── */}
-        <div className="flex items-start justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-[30px] sm:text-[34px] font-bold tracking-tight text-zinc-900 dark:text-white leading-none mb-1.5">
+            <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-zinc-900 dark:text-white leading-none mb-1.5">
               Travel
             </h1>
-            <p className="text-[14px] text-zinc-400 dark:text-zinc-500">
+            <p className="text-[13px] sm:text-[14px] text-zinc-400 dark:text-zinc-500">
               Track trips, bookings, and annual travel plans
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             {/* View toggle */}
-            <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800/70 rounded-xl p-1">
+            <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800/70 rounded-xl p-1 flex-1 sm:flex-none">
               <button
                 onClick={() => setView('list')}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-150',
+                  'flex items-center justify-center gap-1.5 flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-150',
                   view === 'list'
                     ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm'
                     : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
@@ -126,7 +126,7 @@ export function TravelClient({ initialTrips }: TravelClientProps) {
               <button
                 onClick={() => setView('calendar')}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-150',
+                  'flex items-center justify-center gap-1.5 flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-150',
                   view === 'calendar'
                     ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm'
                     : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
@@ -139,10 +139,11 @@ export function TravelClient({ initialTrips }: TravelClientProps) {
 
             <button
               onClick={() => openAddDialog()}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[12px] sm:text-[13px] font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors shrink-0"
             >
               <Plus size={14} strokeWidth={2.5} />
-              Add Trip
+              <span className="hidden sm:inline">Add Trip</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
         </div>
