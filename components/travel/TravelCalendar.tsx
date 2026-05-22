@@ -133,40 +133,38 @@ export function TravelCalendar({ trips, today, onTripEdit, onAddTrip }: TravelCa
   }, [selectedEvents]);
 
   return (
-    <div className="rounded-[20px] overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111111]">
+    <div className="rounded-[20px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111111] overflow-hidden">
 
       {/* ── Calendar Header ── */}
-      <div className="flex items-center justify-between px-5 sm:px-6 pt-5 pb-4">
-        <div className="flex items-baseline gap-2.5">
-          <h2 className="text-[18px] font-semibold text-zinc-900 dark:text-white tracking-tight">
+      <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4">
+        <div className="flex items-baseline gap-2 min-w-0">
+          <h2 className="text-[16px] sm:text-[18px] font-semibold text-zinc-900 dark:text-white tracking-tight truncate">
             {MONTH_NAMES[viewMonth]}
           </h2>
-          <span className="text-[15px] text-zinc-400 dark:text-zinc-600 font-normal">
+          <span className="text-[13px] sm:text-[15px] text-zinc-400 dark:text-zinc-600 font-normal shrink-0">
             {viewYear}
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 shrink-0 ml-2">
           <button
             onClick={goToday}
-            className="px-3 py-1 text-[11px] font-semibold tracking-wide text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+            className="px-2.5 py-1 text-[11px] font-semibold tracking-wide text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
           >
             Today
           </button>
-          <div className="flex items-center">
-            <button
-              onClick={prevMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-            >
-              <ChevronLeft size={15} strokeWidth={2} />
-            </button>
-            <button
-              onClick={nextMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-            >
-              <ChevronRight size={15} strokeWidth={2} />
-            </button>
-          </div>
+          <button
+            onClick={prevMonth}
+            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+          >
+            <ChevronLeft size={14} strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={nextMonth}
+            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+          >
+            <ChevronRight size={14} strokeWidth={2.5} />
+          </button>
         </div>
       </div>
 
