@@ -174,6 +174,24 @@ export async function deleteTask(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Deletes tasks completed more than `days` ago. Falls back to `updated_at`
+ * for legacy rows completed before completion_date was tracked.
+ */
+export async function deleteStaleCompletedTasks(days: number): Promise<number> {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('status', 'done')
+    .or(`completion_date.lt.${cutoff},and(completion_date.is.null,updated_at.lt.${cutoff})`)
+    .select('id');
+
+  if (error) throw new Error(error.message);
+  return data?.length ?? 0;
+}
+
 // ── Projects ──────────────────────────────────────────────────────────────────
 
 export async function getProjects(): Promise<Project[]> {
