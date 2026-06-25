@@ -13,6 +13,7 @@ import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TodayView } from '@/components/tasks/TodayView';
 import { TaskMonthView } from '@/components/tasks/TaskMonthView';
+import { FocusListView } from '@/components/tasks/FocusListView';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 
@@ -162,10 +163,13 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
 
   const handleStatusChange = (id: string, status: Task['status']) => {
     const prev = tasks.find((t) => t.id === id);
+    const now = new Date().toISOString();
+    const completionDate = status === 'done' ? now : undefined;
     setTasks((ts) =>
-      ts.map((t) => (t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t))
+      ts.map((t) => (t.id === id ? { ...t, status, completionDate, updatedAt: now } : t))
     );
-    api(`/api/tasks/${id}`, 'PUT', { status }, () => {
+    // Send `null` (not `undefined`) so JSON.stringify doesn't drop the clear-on-reopen case.
+    api(`/api/tasks/${id}`, 'PUT', { status, completionDate: completionDate ?? null }, () => {
       if (prev) setTasks((ts) => ts.map((t) => (t.id === id ? prev : t)));
       toast('Failed to update status', 'error');
     });
@@ -467,6 +471,18 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 onEdit={openDrawer}
               />
             )
+          )}
+
+          {taskView === 'focus' && (
+            <FocusListView
+              tasks={filteredTasks}
+              projects={projects}
+              onEdit={openDrawer}
+              onStatusChange={handleStatusChange}
+              onToggleWeekFocus={handleToggleWeekFocus}
+              onToggleMonthFocus={handleToggleMonthFocus}
+              onDelete={handleDelete}
+            />
           )}
 
           {taskView === 'week' && (
