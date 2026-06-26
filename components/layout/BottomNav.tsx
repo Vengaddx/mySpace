@@ -3,13 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { CheckSquare, Target, Plane, Map } from 'lucide-react';
+import { CheckSquare, Target, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Tasks',  href: '/tasks',  icon: CheckSquare },
-  { label: 'Goals',  href: '/goals',  icon: Target },
-  { label: 'Travel', href: '/travel', icon: Plane },
+  { label: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { label: 'Goals', href: '/goals', icon: Target },
   // { label: 'Roadmap', href: '/roadmap', icon: Map }, // hidden — work in progress
 ];
 

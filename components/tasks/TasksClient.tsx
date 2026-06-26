@@ -100,10 +100,10 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
     return result;
   }, [workstreamTasks, selectedProjectId, filterPriority, filterStatus, search]);
 
-  // All non-done tasks including follow_up / send_mail (they now live in the list)
+  // Done tasks stay visible (struck through, sunk to bottom by TaskTable) instead of vanishing
   const tableTasks = useMemo(
-    () => sortTasksLogically(filteredTasks.filter((t) => t.status !== 'done' || filterStatus === 'done')),
-    [filteredTasks, filterStatus]
+    () => sortTasksLogically(filteredTasks),
+    [filteredTasks]
   );
 
   const openCount = tasks.filter((t) => t.status !== 'done').length;
