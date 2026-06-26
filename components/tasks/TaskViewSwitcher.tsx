@@ -2,11 +2,10 @@
 
 import { cn } from '@/lib/utils';
 
-export type FocusView = 'tasks' | 'focus' | 'week' | 'today' | 'month';
+export type FocusView = 'tasks' | 'week' | 'today' | 'month';
 
 const VIEWS: { value: FocusView; label: string }[] = [
   { value: 'tasks', label: 'List'  },
-  { value: 'focus', label: 'Focus' },
   { value: 'month', label: 'Month' },
   { value: 'week',  label: 'Week'  },
   { value: 'today', label: 'Day'   },

@@ -13,7 +13,6 @@ import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TodayView } from '@/components/tasks/TodayView';
 import { TaskMonthView } from '@/components/tasks/TaskMonthView';
-import { FocusListView } from '@/components/tasks/FocusListView';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 
@@ -471,18 +470,6 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
                 onEdit={openDrawer}
               />
             )
-          )}
-
-          {taskView === 'focus' && (
-            <FocusListView
-              tasks={filteredTasks}
-              projects={projects}
-              onEdit={openDrawer}
-              onStatusChange={handleStatusChange}
-              onToggleWeekFocus={handleToggleWeekFocus}
-              onToggleMonthFocus={handleToggleMonthFocus}
-              onDelete={handleDelete}
-            />
           )}
 
           {taskView === 'week' && (
