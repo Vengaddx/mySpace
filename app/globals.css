@@ -6,6 +6,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Real content height of BottomNav (mobile only) — kept in one place so
+     AppShell's scroll padding can never drift out of sync with it. */
+  --bottom-nav-h: 3.5rem;
 }
 
 @theme inline {

@@ -17,10 +17,10 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-center px-6 bg-white dark:bg-[#0a0a0a]"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center px-6 bg-white dark:bg-[#0a0a0a]"
       style={{
-        paddingTop: '0.5rem',
-        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
+        height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       {/* Compact liquid glass pill */}
