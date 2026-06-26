@@ -1,16 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useId } from 'react';
-
-function api(url: string, method: string, body?: unknown) {
-  fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
-}
 import { Goal } from '@/types';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api-client';
+import { useToast } from '@/components/ui/Toast';
 import { ChevronLeft, ChevronRight, Plus, X, Check, GripVertical } from 'lucide-react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -34,7 +28,7 @@ function getMonthCells(year: number, month: number): (Date | null)[] {
   return cells;
 }
 // ── Activity Rings (Apple Fitness style) ──────────────────────────────────────
-function GoalRings({ progresses, colors, size }: { progresses: number[]; colors: string[]; size: number }) {
+const GoalRings = React.memo(function GoalRings({ progresses, colors, size }: { progresses: number[]; colors: string[]; size: number }) {
   const uid    = useId().replace(/:/g, '');
   const sw     = size * 0.10;
   const gap    = size * 0.028;
@@ -80,12 +74,19 @@ function GoalRings({ progresses, colors, size }: { progresses: number[]; colors:
       })}
     </svg>
   );
-}
+}, (prev, next) =>
+  prev.size === next.size &&
+  prev.colors.length === next.colors.length &&
+  prev.colors.every((c, i) => c === next.colors[i]) &&
+  prev.progresses.length === next.progresses.length &&
+  prev.progresses.every((p, i) => p === next.progresses[i])
+);
 
 // ── Main component ────────────────────────────────────────────────────────────
 interface GoalsClientProps { initialGoals: Goal[] }
 
 export function GoalsClient({ initialGoals }: GoalsClientProps) {
+  const { toast } = useToast();
   const today = useMemo(() => new Date(), []);
 
   const [goals,       setGoals]       = useState<Goal[]>(initialGoals);
@@ -102,26 +103,36 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
   const [nUnit,   setNUnit]   = useState('');
 
   const monthStr   = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const allGoals   = goals.filter(g => g.month === monthStr);
-  const habits     = allGoals.filter(g => g.type === 'habit');
-  const milestones = allGoals.filter(g => g.type === 'milestone');
+  const allGoals   = useMemo(() => goals.filter(g => g.month === monthStr), [goals, monthStr]);
+  const habits     = useMemo(() => allGoals.filter(g => g.type === 'habit'), [allGoals]);
+  const milestones = useMemo(() => allGoals.filter(g => g.type === 'milestone'), [allGoals]);
 
   function toggle(goalId: string, ds: string) {
-    setGoals(p => p.map(g => {
-      if (g.id !== goalId) return g;
-      const checkins = g.checkins.includes(ds) ? g.checkins.filter(c => c !== ds) : [...g.checkins, ds];
-      api(`/api/goals/${goalId}`, 'PUT', { checkins });
-      return { ...g, checkins };
-    }));
+    const prev = goals.find(g => g.id === goalId);
+    if (!prev) return;
+    const checkins = prev.checkins.includes(ds) ? prev.checkins.filter(c => c !== ds) : [...prev.checkins, ds];
+    setGoals(p => p.map(g => g.id === goalId ? { ...g, checkins } : g));
+    api(`/api/goals/${goalId}`, 'PUT', { checkins }, () => {
+      setGoals(p => p.map(g => g.id === goalId ? prev : g));
+      toast('Failed to update check-in', 'error');
+    });
   }
   function setCurrent(goalId: string, val: number) {
+    const prev = goals.find(g => g.id === goalId);
     const current = Math.max(0, val);
     setGoals(p => p.map(g => g.id === goalId ? { ...g, current } : g));
-    api(`/api/goals/${goalId}`, 'PUT', { current });
+    api(`/api/goals/${goalId}`, 'PUT', { current }, () => {
+      if (prev) setGoals(p => p.map(g => g.id === goalId ? prev : g));
+      toast('Failed to update progress', 'error');
+    });
   }
   function remove(id: string) {
+    const removed = goals.find(g => g.id === id);
     setGoals(p => p.filter(g => g.id !== id));
-    api(`/api/goals/${id}`, 'DELETE');
+    api(`/api/goals/${id}`, 'DELETE', undefined, () => {
+      if (removed) setGoals(p => [...p, removed]);
+      toast('Failed to delete goal', 'error');
+    });
   }
   function startEdit(goal: Goal) {
     setEditingId(goal.id);
@@ -130,8 +141,12 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
   function commitEdit(id: string) {
     const title = editTitle.trim();
     if (title) {
+      const prev = goals.find(g => g.id === id);
       setGoals(p => p.map(g => g.id === id ? { ...g, title } : g));
-      api(`/api/goals/${id}`, 'PUT', { title });
+      api(`/api/goals/${id}`, 'PUT', { title }, () => {
+        if (prev) setGoals(p => p.map(g => g.id === id ? prev : g));
+        toast('Failed to rename goal', 'error');
+      });
     }
     setEditingId(null);
   }
@@ -147,7 +162,10 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       createdAt: new Date().toISOString(),
     };
     setGoals(p => [...p, newGoal]);
-    api('/api/goals', 'POST', newGoal);
+    api('/api/goals', 'POST', newGoal, () => {
+      setGoals(p => p.filter(g => g.id !== newGoal.id));
+      toast('Failed to create goal', 'error');
+    });
     setAdding(false); setNTitle(''); setNColor(PALETTE[0]); setNType('habit'); setNTarget(''); setNUnit('');
   }
 
@@ -172,10 +190,10 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     <div className="max-w-4xl mx-auto space-y-3">
 
       {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-6">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <NavBtn onClick={goMonthBack}><ChevronLeft size={13}/></NavBtn>
-          <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 min-w-[140px] text-center select-none">
+          <span className="text-[12px] sm:text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 min-w-[96px] sm:min-w-[140px] text-center select-none">
             {MONTHS[month]} {year}
           </span>
           <NavBtn onClick={goMonthForward}><ChevronRight size={13}/></NavBtn>
@@ -188,7 +206,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         </div>
 
         <button onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 text-[12px] font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+          className="flex items-center gap-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[12px] font-semibold px-3 py-1.5 rounded-xl hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors shrink-0">
           <Plus size={13}/> Add goal
         </button>
       </div>

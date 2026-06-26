@@ -8,11 +8,9 @@ export default async function GoalsPage() {
   const goals = await getGoals();
   return (
     <PageContainer>
-      <div className="mb-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500 mb-1">
-          Personal
-        </p>
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">Goals</h1>
+      <div className="mb-5">
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">Goals</h1>
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Track habits and milestones</p>
       </div>
       <GoalsClient initialGoals={goals} />
     </PageContainer>
