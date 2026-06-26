@@ -11,7 +11,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <ToastProvider>
       <OfflineBanner />
-      <div className="flex flex-col h-full transition-colors">
+      <div className="flex flex-col h-dvh transition-colors">
         <TopHeader />
         {/* Only this area scrolls — gives native app feel */}
         <main

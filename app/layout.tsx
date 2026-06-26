@@ -37,8 +37,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} antialiased h-full`}>
-      <body className="h-full overflow-hidden">
+    <html lang="en" className={`${geistSans.variable} antialiased h-dvh`}>
+      <body className="h-dvh overflow-hidden">
         <ThemeProvider>
           <AppShell>{children}</AppShell>
         </ThemeProvider>

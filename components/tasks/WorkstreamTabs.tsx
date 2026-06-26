@@ -118,7 +118,7 @@ export function WorkstreamTabs({
           </button>
 
           {showPopover && (
-            <div className="absolute top-9 left-0 z-50 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl dark:shadow-black/50 p-4 w-56">
+            <div className="absolute top-9 right-0 z-50 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl dark:shadow-black/50 p-4 w-56 max-w-[calc(100vw-2.5rem)]">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-2.5">
                 New Workstream
               </p>
