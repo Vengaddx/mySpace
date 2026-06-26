@@ -13,12 +13,11 @@ export function AppShell({ children }: AppShellProps) {
         <TopHeader />
         {/* Only this area scrolls — gives native app feel */}
         <main
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:pb-0"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] lg:pb-0"
           style={{
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'none',
             paddingTop: 'calc(3.5rem + env(safe-area-inset-top))',
-            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))',
           } as React.CSSProperties}
         >
           {children}
