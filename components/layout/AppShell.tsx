@@ -1,6 +1,7 @@
 import { TopHeader } from './TopHeader';
 import { BottomNav } from './BottomNav';
 import { ToastProvider } from '@/components/ui/Toast';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <ToastProvider>
+      <OfflineBanner />
       <div className="flex flex-col h-full transition-colors">
         <TopHeader />
         {/* Only this area scrolls — gives native app feel */}
