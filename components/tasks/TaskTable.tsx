@@ -329,10 +329,22 @@ function TaskRow({
 
       {/* Actions */}
       <td className={cn('pr-4 w-12', cellPad)} onClick={(e) => e.stopPropagation()}>
-        <div className="relative flex justify-end">
+        <div className="relative flex items-center justify-end gap-1">
+          {isDone && (
+            <button
+              onClick={() => onDelete(task.id)}
+              title="Delete"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+            className={cn(
+              'w-7 h-7 flex items-center justify-center rounded-md text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all',
+              !isDone && 'opacity-0 group-hover:opacity-100'
+            )}
           >
             <MoreHorizontal size={14} />
           </button>
@@ -401,8 +413,12 @@ function RowMenu({
   onToggleMonthFocus: () => void;
   onClose: () => void;
 }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
-    const clickHandler = () => onClose();
+    const clickHandler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
     const keyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('click', clickHandler, true);
     document.addEventListener('keydown', keyHandler);
@@ -414,6 +430,7 @@ function RowMenu({
 
   return (
     <div
+      ref={ref}
       className="absolute right-0 top-8 z-50 bg-white dark:bg-zinc-950 rounded-xl border border-zinc-100 dark:border-zinc-800 shadow-lg dark:shadow-black/40 py-1 w-48"
       onClick={(e) => e.stopPropagation()}
     >
