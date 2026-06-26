@@ -12,7 +12,6 @@ import { ProjectSideNav } from '@/components/tasks/ProjectSideNav';
 import { TaskViewSwitcher, FocusView } from '@/components/tasks/TaskViewSwitcher';
 import { WeekCalendarView } from '@/components/tasks/WeekCalendarView';
 import { TodayView } from '@/components/tasks/TodayView';
-import { TaskMonthView } from '@/components/tasks/TaskMonthView';
 import { useToast } from '@/components/ui/Toast';
 import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 
@@ -222,9 +221,21 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
   };
 
   const handleSave = (updated: Task) => {
-    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    const prev = tasks.find((t) => t.id === updated.id);
+    setTasks((ts) => ts.map((t) => (t.id === updated.id ? updated : t)));
     api(`/api/tasks/${updated.id}`, 'PUT', updated, () => {
+      if (prev) setTasks((ts) => ts.map((t) => (t.id === updated.id ? prev : t)));
       toast('Failed to save task', 'error');
+    });
+  };
+
+  // Shared by Week/Day drag-to-reschedule
+  const handleUpdateTask = (id: string, updates: Partial<Task>) => {
+    const prev = tasks.find((t) => t.id === id);
+    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t)));
+    api(`/api/tasks/${id}`, 'PUT', updates, () => {
+      if (prev) setTasks((ts) => ts.map((t) => (t.id === id ? prev : t)));
+      toast('Failed to reschedule task', 'error');
     });
   };
 
@@ -477,10 +488,7 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
               tasks={filteredTasks.filter((t) => !t.isUnscheduled)}
               projects={projects}
               onEditTask={openDrawer}
-              onUpdateTask={(id, updates) => {
-                setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
-                api(`/api/tasks/${id}`, 'PUT', updates);
-              }}
+              onUpdateTask={handleUpdateTask}
               onCreateTask={handleCreateFromTimeline}
               unscheduledTasks={filteredTasks.filter(t =>
                 t.status !== 'done' &&
@@ -494,21 +502,11 @@ export function TasksClient({ initialTasks, initialProjects }: TasksClientProps)
               tasks={filteredTasks}
               projects={projects}
               onEditTask={openDrawer}
-              onUpdateTask={(id, updates) => {
-                setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
-                api(`/api/tasks/${id}`, 'PUT', updates);
-              }}
+              onUpdateTask={handleUpdateTask}
               onCreateTask={handleCreateFromTimeline}
             />
           )}
 
-          {taskView === 'month' && (
-            <TaskMonthView
-              tasks={filteredTasks}
-              today={new Date().toISOString().slice(0, 10)}
-              onTaskEdit={openDrawer}
-            />
-          )}
         </div>
       </div>
 

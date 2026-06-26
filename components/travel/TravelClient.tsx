@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import { Plus, MapPin, List, CalendarDays } from 'lucide-react';
 import { Trip, getNextTrip } from '@/lib/travel-data';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/Toast';
+import { api } from '@/lib/api-client';
 import { TravelSummaryStrip } from './TravelSummaryStrip';
 import { TravelHeroCard, TravelHeroEmpty } from './TravelHeroCard';
 import { TripCard } from './TripCard';
@@ -14,17 +16,10 @@ const TODAY = new Date().toISOString().slice(0, 10);
 
 type View = 'list' | 'calendar';
 
-function api(url: string, method: string, body?: unknown) {
-  fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  }).catch((e) => console.error(`[db] ${method} ${url}:`, e));
-}
-
 interface TravelClientProps { initialTrips: Trip[] }
 
 export function TravelClient({ initialTrips }: TravelClientProps) {
+  const { toast } = useToast();
   const [trips, setTrips] = useState<Trip[]>(initialTrips);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTrip, setEditTrip] = useState<Trip | null>(null);
@@ -73,9 +68,13 @@ export function TravelClient({ initialTrips }: TravelClientProps) {
 
   function handleSave(data: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>) {
     if (editTrip) {
+      const prev = editTrip;
       const updated: Trip = { ...editTrip, ...data, updatedAt: new Date().toISOString() };
-      setTrips((prev) => prev.map((t) => t.id === editTrip.id ? updated : t));
-      api(`/api/trips/${editTrip.id}`, 'PUT', data);
+      setTrips((ts) => ts.map((t) => t.id === editTrip.id ? updated : t));
+      api(`/api/trips/${editTrip.id}`, 'PUT', data, () => {
+        setTrips((ts) => ts.map((t) => t.id === prev.id ? prev : t));
+        toast('Failed to save trip', 'error');
+      });
     } else {
       const newTrip: Trip = {
         ...data,
@@ -84,13 +83,20 @@ export function TravelClient({ initialTrips }: TravelClientProps) {
         updatedAt: new Date().toISOString(),
       };
       setTrips((prev) => [...prev, newTrip]);
-      api('/api/trips', 'POST', newTrip);
+      api('/api/trips', 'POST', newTrip, () => {
+        setTrips((prev) => prev.filter((t) => t.id !== newTrip.id));
+        toast('Failed to create trip', 'error');
+      });
     }
   }
 
   function handleDelete(id: string) {
+    const removed = trips.find((t) => t.id === id);
     setTrips((prev) => prev.filter((t) => t.id !== id));
-    api(`/api/trips/${id}`, 'DELETE');
+    api(`/api/trips/${id}`, 'DELETE', undefined, () => {
+      if (removed) setTrips((prev) => [...prev, removed]);
+      toast('Failed to delete trip', 'error');
+    });
   }
 
   return (
@@ -98,12 +104,12 @@ export function TravelClient({ initialTrips }: TravelClientProps) {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-10">
 
         {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
           <div>
-            <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-zinc-900 dark:text-white leading-none mb-1.5">
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
               Travel
             </h1>
-            <p className="text-[13px] sm:text-[14px] text-zinc-400 dark:text-zinc-500">
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
               Track trips, bookings, and annual travel plans
             </p>
           </div>

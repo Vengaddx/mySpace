@@ -33,40 +33,6 @@ export interface Task {
   updatedAt: string;
 }
 
-export interface WeeklyIntent {
-  id: string;
-  weekStart: string; // ISO string
-  objectives: string;
-  mustGetDone: string;
-  watchouts: string;
-}
-
-export interface MonthlyFocus {
-  id: string;
-  month: string; // YYYY-MM
-  focusAreas: string;
-  majorCommitments: string;
-  risks: string;
-  personalGoals: string;
-}
-
-export interface StatsData {
-  totalOpen: number;
-  critical: number;
-  dueToday: number;
-  overdue: number;
-}
-
-export interface MonthlyGoal {
-  id: string;
-  month: string;        // YYYY-MM
-  title: string;
-  workstream: Workstream;
-  progress: number;     // 0–100
-  notes?: string;
-  createdAt: string;
-}
-
 export interface Goal {
   id: string;
   title: string;
@@ -81,5 +47,3 @@ export interface Goal {
   createdAt: string;
 }
 
-export type FilterChip = 'all' | 'aramco' | 'satorp' | 'pmo' | 'personal';
-export type TaskView = 'all' | 'today' | 'upcoming' | 'overdue' | 'completed';

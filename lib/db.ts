@@ -7,7 +7,7 @@
 import 'server-only';
 
 import { supabase } from '@/lib/supabase';
-import type { Task, Project, WeeklyIntent, MonthlyFocus, MonthlyGoal, Goal } from '@/types';
+import type { Task, Project, Goal } from '@/types';
 import type { Trip } from '@/lib/travel-data';
 
 // ── Type mappers: DB row (snake_case) → TypeScript type (camelCase) ───────────
@@ -68,42 +68,6 @@ function taskToRow(t: Partial<Task>): Record<string, unknown> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToProject(r: any): Project {
   return { id: r.id, name: r.name, workstream: r.workstream, createdAt: r.created_at };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToWeeklyIntent(r: any): WeeklyIntent {
-  return {
-    id: r.id,
-    weekStart: r.week_start,
-    objectives: r.objectives,
-    mustGetDone: r.must_get_done,
-    watchouts: r.watchouts,
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToMonthlyFocus(r: any): MonthlyFocus {
-  return {
-    id: r.id,
-    month: r.month,
-    focusAreas: r.focus_areas,
-    majorCommitments: r.major_commitments,
-    risks: r.risks,
-    personalGoals: r.personal_goals,
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToMonthlyGoal(r: any): MonthlyGoal {
-  return {
-    id: r.id,
-    month: r.month,
-    title: r.title,
-    workstream: r.workstream,
-    progress: r.progress,
-    notes: r.notes ?? undefined,
-    createdAt: r.created_at,
-  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -219,70 +183,6 @@ export async function updateProject(id: string, name: string): Promise<Project> 
 export async function deleteProject(id: string): Promise<void> {
   const { error } = await supabase.from('projects').delete().eq('id', id);
   if (error) throw new Error(error.message);
-}
-
-// ── Weekly Intent ─────────────────────────────────────────────────────────────
-
-export async function getWeeklyIntent(): Promise<WeeklyIntent | null> {
-  const { data, error } = await supabase
-    .from('weekly_intents').select('*').order('week_start', { ascending: false }).limit(1);
-  if (error) throw new Error(error.message);
-  return data.length ? rowToWeeklyIntent(data[0]) : null;
-}
-
-export async function upsertWeeklyIntent(intent: WeeklyIntent): Promise<WeeklyIntent> {
-  const { data, error } = await supabase.from('weekly_intents').upsert({
-    id: intent.id,
-    week_start: intent.weekStart,
-    objectives: intent.objectives,
-    must_get_done: intent.mustGetDone,
-    watchouts: intent.watchouts,
-  }).select().single();
-  if (error) throw new Error(error.message);
-  return rowToWeeklyIntent(data);
-}
-
-// ── Monthly Focus ─────────────────────────────────────────────────────────────
-
-export async function getMonthlyFocus(month?: string): Promise<MonthlyFocus | null> {
-  const m = month ?? new Date().toISOString().slice(0, 7);
-  const { data, error } = await supabase
-    .from('monthly_focus').select('*').eq('month', m).limit(1);
-  if (error) throw new Error(error.message);
-  return data.length ? rowToMonthlyFocus(data[0]) : null;
-}
-
-export async function upsertMonthlyFocus(focus: MonthlyFocus): Promise<MonthlyFocus> {
-  const { data, error } = await supabase.from('monthly_focus').upsert({
-    id: focus.id,
-    month: focus.month,
-    focus_areas: focus.focusAreas,
-    major_commitments: focus.majorCommitments,
-    risks: focus.risks,
-    personal_goals: focus.personalGoals,
-  }).select().single();
-  if (error) throw new Error(error.message);
-  return rowToMonthlyFocus(data);
-}
-
-// ── Monthly Goals ─────────────────────────────────────────────────────────────
-
-export async function getMonthlyGoals(month?: string): Promise<MonthlyGoal[]> {
-  const m = month ?? new Date().toISOString().slice(0, 7);
-  const { data, error } = await supabase
-    .from('monthly_goals').select('*').eq('month', m).order('created_at');
-  if (error) throw new Error(error.message);
-  return data.map(rowToMonthlyGoal);
-}
-
-export async function updateMonthlyGoal(id: string, updates: Partial<MonthlyGoal>): Promise<MonthlyGoal> {
-  const row: Record<string, unknown> = {};
-  if (updates.progress !== undefined) row.progress = updates.progress;
-  if ('notes' in updates) row.notes = updates.notes ?? null;
-  const { data, error } = await supabase
-    .from('monthly_goals').update(row).eq('id', id).select().single();
-  if (error) throw new Error(error.message);
-  return rowToMonthlyGoal(data);
 }
 
 // ── Goals ─────────────────────────────────────────────────────────────────────
