@@ -21,7 +21,7 @@ export function TopHeader() {
       className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-zinc-200/70 dark:border-zinc-800/70"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="h-14 px-4 sm:px-6 lg:px-10 flex items-center justify-between">
+      <div className="h-14 px-3 sm:px-6 lg:px-10 flex items-center justify-between gap-2">
         {/* Logo */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Icon: 2×2 grid, top-left cell highlighted */}
@@ -37,8 +37,8 @@ export function TopHeader() {
           </span>
         </div>
 
-        {/* Nav — desktop only; mobile uses BottomNav */}
-        <nav className="hidden lg:flex items-center gap-0.5">
+        {/* Nav — visible at every breakpoint; no fixed bottom bar on mobile */}
+        <nav className="flex items-center gap-0.5">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
@@ -46,7 +46,7 @@ export function TopHeader() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'px-3.5 py-1.5 text-[13px] font-medium rounded-md transition-all',
+                  'px-2.5 sm:px-3.5 py-1.5 text-[12px] sm:text-[13px] font-medium rounded-md transition-all whitespace-nowrap',
                   isActive
                     ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900'
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/70'

@@ -1,5 +1,4 @@
 import { TopHeader } from './TopHeader';
-import { BottomNav } from './BottomNav';
 import { ToastProvider } from '@/components/ui/Toast';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
@@ -15,7 +14,7 @@ export function AppShell({ children }: AppShellProps) {
         <TopHeader />
         {/* Only this area scrolls — gives native app feel */}
         <main
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom))] lg:pb-0"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-[env(safe-area-inset-bottom)]"
           style={{
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'none',
@@ -24,7 +23,6 @@ export function AppShell({ children }: AppShellProps) {
         >
           {children}
         </main>
-        <BottomNav />
       </div>
     </ToastProvider>
   );
