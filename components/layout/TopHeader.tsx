@@ -7,9 +7,8 @@ import { Sun, Moon, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Tasks',  href: '/tasks' },
-  { label: 'Goals',  href: '/goals' },
-  { label: 'Travel', href: '/travel' },
+  { label: 'Tasks', href: '/tasks' },
+  { label: 'Goals', href: '/goals' },
   // { label: 'Roadmap', href: '/roadmap' }, // hidden — work in progress
 ];
 

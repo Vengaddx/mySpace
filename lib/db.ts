@@ -8,7 +8,6 @@ import 'server-only';
 
 import { supabase } from '@/lib/supabase';
 import type { Task, Project, Goal } from '@/types';
-import type { Trip } from '@/lib/travel-data';
 
 // ── Type mappers: DB row (snake_case) → TypeScript type (camelCase) ───────────
 
@@ -84,29 +83,6 @@ function rowToGoal(r: any): Goal {
     unit: r.unit ?? undefined,
     current: r.current ?? undefined,
     createdAt: r.created_at,
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function rowToTrip(r: any): Trip {
-  return {
-    id: r.id,
-    title: r.title,
-    fromCity: r.from_city,
-    toCity: r.to_city,
-    fromCode: r.from_code,
-    toCode: r.to_code,
-    departureDate: r.departure_date,
-    returnDate: r.return_date ?? undefined,
-    status: r.status,
-    tripType: r.trip_type,
-    airline: r.airline ?? undefined,
-    bookingReference: r.booking_reference ?? undefined,
-    notes: r.notes ?? undefined,
-    reminderAt: r.reminder_at ?? undefined,
-    isRoundTrip: r.is_round_trip,
-    createdAt: r.created_at,
-    updatedAt: r.updated_at,
   };
 }
 
@@ -227,63 +203,5 @@ export async function updateGoal(id: string, updates: Partial<Goal>): Promise<Go
 
 export async function deleteGoal(id: string): Promise<void> {
   const { error } = await supabase.from('goals').delete().eq('id', id);
-  if (error) throw new Error(error.message);
-}
-
-// ── Trips ─────────────────────────────────────────────────────────────────────
-
-export async function getTrips(): Promise<Trip[]> {
-  const { data, error } = await supabase
-    .from('trips').select('*').order('departure_date');
-  if (error) throw new Error(error.message);
-  return data.map(rowToTrip);
-}
-
-export async function createTrip(trip: Trip): Promise<Trip> {
-  const { data, error } = await supabase.from('trips').insert({
-    id: trip.id,
-    title: trip.title,
-    from_city: trip.fromCity,
-    to_city: trip.toCity,
-    from_code: trip.fromCode,
-    to_code: trip.toCode,
-    departure_date: trip.departureDate,
-    return_date: trip.returnDate ?? null,
-    status: trip.status,
-    trip_type: trip.tripType,
-    airline: trip.airline ?? null,
-    booking_reference: trip.bookingReference ?? null,
-    notes: trip.notes ?? null,
-    reminder_at: trip.reminderAt ?? null,
-    is_round_trip: trip.isRoundTrip,
-  }).select().single();
-  if (error) throw new Error(error.message);
-  return rowToTrip(data);
-}
-
-export async function updateTrip(id: string, updates: Partial<Trip>): Promise<Trip> {
-  const row: Record<string, unknown> = {};
-  if (updates.title         !== undefined) row.title             = updates.title;
-  if (updates.fromCity      !== undefined) row.from_city         = updates.fromCity;
-  if (updates.toCity        !== undefined) row.to_city           = updates.toCity;
-  if (updates.fromCode      !== undefined) row.from_code         = updates.fromCode;
-  if (updates.toCode        !== undefined) row.to_code           = updates.toCode;
-  if (updates.departureDate !== undefined) row.departure_date    = updates.departureDate;
-  if ('returnDate'    in updates) row.return_date       = updates.returnDate ?? null;
-  if (updates.status        !== undefined) row.status            = updates.status;
-  if (updates.tripType      !== undefined) row.trip_type         = updates.tripType;
-  if ('airline'       in updates) row.airline           = updates.airline ?? null;
-  if ('bookingReference' in updates) row.booking_reference = updates.bookingReference ?? null;
-  if ('notes'         in updates) row.notes             = updates.notes ?? null;
-  if ('reminderAt'    in updates) row.reminder_at       = updates.reminderAt ?? null;
-  if (updates.isRoundTrip   !== undefined) row.is_round_trip     = updates.isRoundTrip;
-  const { data, error } = await supabase
-    .from('trips').update(row).eq('id', id).select().single();
-  if (error) throw new Error(error.message);
-  return rowToTrip(data);
-}
-
-export async function deleteTrip(id: string): Promise<void> {
-  const { error } = await supabase.from('trips').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
