@@ -22,12 +22,12 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
-function StatusIcon({ status }: { status: Task['status'] }) {
-  if (status === 'done')        return <CheckCircle2 size={15} style={{ color: '#4ade80' }} />;
-  if (status === 'in_progress') return <PlayCircle   size={15} style={{ color: '#00C1FF' }} />;
-  if (status === 'follow_up')   return <Bell         size={15} style={{ color: '#FF9900' }} />;
-  if (status === 'send_mail')   return <Mail         size={15} style={{ color: '#a78bfa' }} />;
-  return <Circle size={15} style={{ color: '#a1a1aa' }} />;
+function StatusIcon({ status, size = 15 }: { status: Task['status']; size?: number }) {
+  if (status === 'done')        return <CheckCircle2 size={size} style={{ color: '#4ade80' }} />;
+  if (status === 'in_progress') return <PlayCircle   size={size} style={{ color: '#00C1FF' }} />;
+  if (status === 'follow_up')   return <Bell         size={size} style={{ color: '#FF9900' }} />;
+  if (status === 'send_mail')   return <Mail         size={size} style={{ color: '#a78bfa' }} />;
+  return <Circle size={size} style={{ color: '#a1a1aa' }} />;
 }
 
 interface TaskTableProps {
@@ -75,6 +75,12 @@ export function TaskTable({
       const aCrit = a.priority === 'critical' && a.status !== 'done' ? 0 : 1;
       const bCrit = b.priority === 'critical' && b.status !== 'done' ? 0 : 1;
       if (aCrit !== bCrit) return aCrit - bCrit;
+    }
+    // In-progress tasks float above plain to-dos — keep focus items visible (unless sorted by status)
+    if (sortKey !== 'status') {
+      const aProg = a.status === 'in_progress' ? 0 : 1;
+      const bProg = b.status === 'in_progress' ? 0 : 1;
+      if (aProg !== bProg) return aProg - bProg;
     }
     let cmp = 0;
     if (sortKey === 'dueDate') {
@@ -218,64 +224,76 @@ function TaskRow({
   const overdue = isOverdue(task.dueDate, task.status, task.isUnscheduled);
   const dueToday = isToday(task.dueDate);
   const isDone = task.status === 'done';
+  const isInProgress = task.status === 'in_progress' && !isDone;
+  const cellPad = isInProgress ? 'py-4' : 'py-3.5';
 
   return (
     <tr
       className={cn(
         'group cursor-pointer transition-colors',
-        isDone ? 'opacity-45' : '',
+        isDone && 'opacity-45',
+        isInProgress
+          ? 'bg-accent-cyan/[0.06] dark:bg-accent-cyan/[0.08] hover:bg-accent-cyan/[0.1] dark:hover:bg-accent-cyan/[0.13]'
+          : 'hover:bg-zinc-50/80 dark:hover:bg-zinc-900/40',
         !isLast && 'border-b border-zinc-100 dark:border-zinc-800/60',
-        'hover:bg-zinc-50/80 dark:hover:bg-zinc-900/40'
       )}
       onClick={() => onEdit(task)}
     >
       {/* Sno */}
-      <td className="pl-4 pr-2 py-3.5 w-10">
+      <td className={cn('pl-4 pr-2 w-10', cellPad, isInProgress && 'shadow-[inset_3px_0_0_0_var(--color-accent-cyan)]')}>
         <span className="text-[11px] text-zinc-300 dark:text-zinc-600 tabular-nums">{sno}</span>
       </td>
 
       {/* Status icon */}
-      <td className="pr-2 py-3.5 w-10" onClick={(e) => e.stopPropagation()}>
+      <td className={cn('pr-2 w-10', cellPad)} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => onStatusChange(task.id, isDone ? 'todo' : 'done')}
           className="transition-opacity hover:opacity-70"
           title={task.status}
         >
-          <StatusIcon status={task.status} />
+          <StatusIcon status={task.status} size={isInProgress ? 17 : 15} />
         </button>
       </td>
 
       {/* Task name */}
-      <td className="px-3 py-3.5 min-w-0 max-w-[320px]">
+      <td className={cn('px-3 min-w-0 max-w-[320px]', cellPad)}>
         <div className="flex items-center gap-2 min-w-0">
           {task.priority === 'critical' && !isDone && (
             <AlertCircle size={12} className="text-accent-orange shrink-0" />
           )}
           <p
             className={cn(
-              'text-[13px] font-medium leading-snug truncate',
+              'leading-snug truncate',
               isDone
-                ? 'line-through text-zinc-400 dark:text-zinc-500'
-                : 'text-zinc-900 dark:text-zinc-50'
+                ? 'text-[13px] font-medium line-through text-zinc-400 dark:text-zinc-500'
+                : isInProgress
+                ? 'text-[14.5px] font-bold text-zinc-900 dark:text-zinc-50'
+                : 'text-[13px] font-medium text-zinc-900 dark:text-zinc-50'
             )}
           >
             {task.title}
           </p>
+          {isInProgress && (
+            <span className="shrink-0 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-accent-cyan bg-accent-cyan/15 px-1.5 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent-cyan animate-pulse" />
+              Focus
+            </span>
+          )}
         </div>
       </td>
 
       {/* Priority */}
-      <td className="px-3 py-3.5 hidden sm:table-cell">
+      <td className={cn('px-3 hidden sm:table-cell', cellPad)}>
         <PriorityChip priority={task.priority} />
       </td>
 
       {/* Status */}
-      <td className="px-3 py-3.5 hidden md:table-cell">
+      <td className={cn('px-3 hidden md:table-cell', cellPad)}>
         <StatusChip status={task.status} />
       </td>
 
       {/* Due Date */}
-      <td className="px-3 py-3.5 hidden sm:table-cell whitespace-nowrap">
+      <td className={cn('px-3 hidden sm:table-cell whitespace-nowrap', cellPad)}>
         <div
           className={cn(
             'flex items-center gap-1.5 text-[12px] font-medium',
@@ -298,7 +316,7 @@ function TaskRow({
       </td>
 
       {/* Reminder */}
-      <td className="px-3 py-3.5 hidden lg:table-cell whitespace-nowrap">
+      <td className={cn('px-3 hidden lg:table-cell whitespace-nowrap', cellPad)}>
         {task.reminderAt ? (
           <div className="flex items-center gap-1.5 text-[12px] text-zinc-400 dark:text-zinc-500">
             <Bell size={11} />
@@ -310,7 +328,7 @@ function TaskRow({
       </td>
 
       {/* Actions */}
-      <td className="pr-4 py-3.5 w-12" onClick={(e) => e.stopPropagation()}>
+      <td className={cn('pr-4 w-12', cellPad)} onClick={(e) => e.stopPropagation()}>
         <div className="relative flex justify-end">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
